@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>응급의료 GIS 관제 시스템 (Pure JS)</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Pretendard', -apple-system, sans-serif; overflow: hidden; }
+        #map { width: 100vw; height: 100vh; }
+        .dashboard {
+            position: absolute; top: 15px; left: 15px; z-index: 1000;
+            background: rgba(255, 255, 255, 0.95); padding: 18px 20px;
+            border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            width: 340px; max-height: 90vh; overflow-y: auto; border: 1px solid #e2e8f0;
+        }
+        .dashboard h2 { font-size: 16px; color: #0f172a; margin-bottom: 12px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px; }
+        select, button {
+            width: 100%; padding: 9px 12px; font-size: 13px; border-radius: 8px;
+            border: 1px solid #cbd5e1; background: #fff; outline: none; transition: all 0.2s;
+        }
+        .btn-group { display: flex; gap: 8px; margin-top: 10px; }
+        .btn { background-color: #2563eb; color: white; border: none; font-weight: 600; cursor: pointer; }
+        .btn:hover { background-color: #1d4ed8; }
+        .btn-danger { background-color: #dc2626; }
+        .btn-danger:hover { background-color: #b91c1c; }
+        .btn-secondary { background-color: #64748b; }
+
+        .status-badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; color: white; }
+        .bg-119 { background-color: #dc2626; }
+        .bg-univ { background-color: #2563eb; }
+        .bg-private { background-color: #d97706; }
+
+        .log-box {
+            margin-top: 15px; background: #0f172a; color: #38bdf8;
+            padding: 10px; border-radius: 8px; font-family: monospace;
+            font-size: 11px; height: 140px; overflow-y: auto; line-height: 1.5;
+        }
+        .log-entry { margin-bottom: 4px; border-bottom: 1px dashed #334155; padding-bottom: 2px; }
+        .custom-marker {
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; color: white; font-weight: bold;
+            border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <h2>🚨 관제 및 GIS 최적화</h2>
+
+        <div class="form-group">
+            <label>관제 지역 선택</label>
+            <select id="regionSelect" onchange="changeRegion()">
+                <option value="충주">충청북도 충주시 전지역</option>
+                <option value="서울">서울특별시 전지역</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>출동 구급차 유형 선택</label>
+            <select id="ambulanceTypeSelect">
+                <option value="119">119 구급대 (소방)</option>
+                <option value="univ">대학병원 구급차</option>
+                <option value="private">사설 구급차</option>
+            </select>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-danger" onclick="generateEmergencyCall()">⚡ 시뮬레이션 응급콜 발생</button>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn" id="autoBtn" onclick="toggleAutoCall()">자동 응급콜 시작 (3초)</button>
+            <button class="btn btn-secondary" onclick="clearAllRoutes()">초기화</button>
+        </div>
+
+        <div class="log-box" id="logBox">
+            <div class="log-entry">[시스템] GIS 관제 시스템이 준비되었습니다.</div>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Leaflet JS (Leaflet만 사용) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
+    <script>
+        const hospitalData = {
+            "충주": [
+                { name: "건국대학교 충주병원 (응급실)", lat: 36.9691, lng: 127.9304 },
+                { name: "충주의료원 (응급실)", lat: 36.9531, lng: 127.9628 },
+                { name: "충주 중앙병원", lat: 36.9745, lng: 127.9228 },
+                { name: "충주 세성병원", lat: 36.9205, lng: 127.9982 }
+            ],
+            "서울": [
+                { name: "서울대학교병원 응급실", lat: 37.5796, lng: 126.9990 },
+                { name: "연세대학교 세브란스병원", lat: 37.5621, lng: 126.9408 },
+                { name: "가톨릭대학교 서울성모병원", lat: 37.5022, lng: 127.0048 },
+                { name: "삼성서울병원 응급실", lat: 37.4882, lng: 127.0856 },
+                { name: "서울아산병원 응급실", lat: 37.5266, lng: 127.1080 },
+                { name: "고려대학교 안암병원", lat: 37.5872, lng: 127.0318 }
+            ]
+        };
+
+        const regionBounds = {
+            "충주": { center: [36.97, 127.93], zoom: 12, minLat: 36.90, maxLat: 37.05, minLng: 127.85, maxLng: 128.05 },
+            "서울": { center: [37.5665, 126.9780], zoom: 11, minLat: 37.45, maxLat: 37.65, minLng: 126.85, maxLng: 127.15 }
+        };
+
+        const ambulanceStyles = {
+            "119": { name: "119 구급대", color: "#dc2626", bgClass: "bg-119", symbol: "🚑" },
+            "univ": { name: "대학병원 구급차", color: "#2563eb", bgClass: "bg-univ", symbol: "🏥" },
+            "private": { name: "사설 응급차", color: "#d97706", bgClass: "bg-private", symbol: "🚐" }
+        };
+
+        let map, currentRegion = "충주", hospitalMarkers = [], activeAnimations = [], autoCallInterval = null, callCount = 0;
+
+        // Haversine 공식을 사용한 위경도 간 거리를 km로 계산하는 함수
+        function getDistanceKm(lat1, lon1, lat2, lon2) {
+            const R = 6371; // 지구 반지름 (km)
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function initMap() {
+            const region = regionBounds[currentRegion];
+            map = L.map('map').setView(region.center, region.zoom);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            renderHospitals();
+        }
+
+        function renderHospitals() {
+            hospitalMarkers.forEach(m => map.removeLayer(m));
+            hospitalMarkers = [];
+
+            const hospitals = hospitalData[currentRegion];
+            hospitals.forEach(h => {
+                const icon = L.divIcon({
+                    html: `<div class="custom-marker" style="background:#dc2626;width:30px;height:30px;font-size:14px;">🏥</div>`,
+                    className: '', iconSize: [30, 30], iconAnchor: [15, 15]
+                });
+                const marker = L.marker([h.lat, h.lng], { icon: icon }).addTo(map).bindPopup(`<b>${h.name}</b>`);
+                hospitalMarkers.push(marker);
+            });
+            log(`[지역] ${currentRegion} 병원 마커 ${hospitals.length}개 로드 완료`);
+        }
+
+        function changeRegion() {
+            clearAllRoutes();
+            currentRegion = document.getElementById('regionSelect').value;
+            const region = regionBounds[currentRegion];
+            map.flyTo(region.center, region.zoom);
+            renderHospitals();
+        }
+
+        function generateEmergencyCall() {
+            callCount++;
+            const bounds = regionBounds[currentRegion];
+            const patientLat = bounds.minLat + Math.random() * (bounds.maxLat - bounds.minLat);
+            const patientLng = bounds.minLng + Math.random() * (bounds.maxLng - bounds.minLng);
+
+            const ambTypeKey = document.getElementById('ambulanceTypeSelect').value;
+            const ambInfo = ambulanceStyles[ambTypeKey];
+
+            // Pure JS 기반 최단거리 병원 탐색
+            const hospitals = hospitalData[currentRegion];
+            let nearestHospital = null;
+            let minDistance = Infinity;
+
+            hospitals.forEach(h => {
+                const dist = getDistanceKm(patientLat, patientLng, h.lat, h.lng);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    nearestHospital = h;
+                }
+            });
+
+            log(`[응급콜 #${callCount}] <span class="status-badge ${ambInfo.bgClass}">${ambInfo.name}</span> 출동! -> ${nearestHospital.name} (${minDistance.toFixed(2)}km)`);
+            runAmbulanceSimulation([patientLat, patientLng], [nearestHospital.lat, nearestHospital.lng], ambInfo, nearestHospital.name);
+        }
+
+        function runAmbulanceSimulation(startCoord, endCoord, ambInfo, hospitalName) {
+            const patientIcon = L.divIcon({
+                html: `<div class="custom-marker" style="background:#0284c7;width:24px;height:24px;font-size:12px;">🚨</div>`,
+                className: '', iconSize: [24, 24], iconAnchor: [12, 12]
+            });
+            const patientMarker = L.marker(startCoord, { icon: patientIcon }).addTo(map).bindPopup(`<b>응급환자 발생</b>`);
+
+            const polyline = L.polyline([startCoord, endCoord], { color: ambInfo.color, weight: 4, opacity: 0.7, dashArray: '6, 8' }).addTo(map);
+
+            const ambIcon = L.divIcon({
+                html: `<div class="custom-marker" style="background:${ambInfo.color};width:32px;height:32px;font-size:16px;">${ambInfo.symbol}</div>`,
+                className: '', iconSize: [32, 32], iconAnchor: [16, 16]
+            });
+            const ambMarker = L.marker(startCoord, { icon: ambIcon }).addTo(map);
+
+            const steps = 100;
+            let currentStep = 0;
+            const animInterval = setInterval(() => {
+                currentStep++;
+                const progress = currentStep / steps;
+                const lat = startCoord[0] + (endCoord[0] - startCoord[0]) * progress;
+                const lng = startCoord[1] + (endCoord[1] - startCoord[1]) * progress;
+                ambMarker.setLatLng([lat, lng]);
+
+                if (currentStep >= steps) {
+                    clearInterval(animInterval);
+                    ambMarker.bindPopup(`<b>${ambInfo.name} 도착 완료</b><br>${hospitalName}`).openPopup();
+                }
+            }, 60);
+
+            activeAnimations.push({ interval: animInterval, layers: [patientMarker, polyline, ambMarker] });
+        }
+
+        function toggleAutoCall() {
+            const btn = document.getElementById('autoBtn');
+            if (autoCallInterval) {
+                clearInterval(autoCallInterval);
+                autoCallInterval = null;
+                btn.innerText = "자동 응급콜 시작 (3초)";
+                btn.classList.remove('btn-danger');
+            } else {
+                generateEmergencyCall();
+                autoCallInterval = setInterval(generateEmergencyCall, 3000);
+                btn.innerText = "자동 응급콜 중지";
+                btn.classList.add('btn-danger');
+            }
+        }
+
+        function clearAllRoutes() {
+            activeAnimations.forEach(item => {
+                clearInterval(item.interval);
+                item.layers.forEach(l => map.removeLayer(l));
+            });
+            activeAnimations = [];
+            log(`[시스템] 모든 경로 및 마커 초기화 완료`);
+        }
+
+        function log(msg) {
+            const logBox = document.getElementById('logBox');
+            const time = new Date().toLocaleTimeString('ko-KR', { hour12: false });
+            logBox.innerHTML = `<div class="log-entry">[${time}] ${msg}</div>` + logBox.innerHTML;
+        }
+
+        window.onload = initMap;
+    </script>
+</body>
+</html>

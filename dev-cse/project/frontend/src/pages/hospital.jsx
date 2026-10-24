@@ -29,19 +29,26 @@ export default function Hospital() {
         }
     ]);
 
-    const [acceptedPatients, setAcceptedPatients] = useState([
-        {
-            _id: 'REQ-101',
-            severity: 'KTAS 2',
-            severityLabel: '긴급',
-            name: '오태양',
-            symptom: '낙상 - 좌측 하지 골절 의심',
-            location: '성북 119-1',
-            etaTime: '02:50',
-            etaAbsolute: '23:51',
-            image: 'https://via.placeholder.com/80x60?text=Trauma'
-        }
-    ]);
+   const [acceptedPatients, setAcceptedPatients] = useState([
+  {
+    id: 1,
+    name: "오태양",
+    severity: "KTAS 2 · 긴급",
+    symptom: "낙상 · 좌측 하지 골절 의심",
+    ambulance: "성북 119-1",
+    eta: "02:50",
+    estimatedTime: "23:51"
+  },
+  {
+    id: 2,
+    name: "정하율",
+    severity: "KTAS 3 · 응급",
+    symptom: "자전거 사고 · 전완부 찰과상",
+    ambulance: "서대문 119-2",
+    eta: "00:50",
+    estimatedTime: "23:49"
+  }
+]);
 
     useEffect(() => {
         async function HospitalData() {
@@ -223,15 +230,48 @@ export default function Hospital() {
 
         {/* [우측] 지도 영역 및 최근 수락 환자 */}
         <div className="col-span-5 space-y-6">
-          <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-gray-900">수락된 구급차 현재 위치</h3>
-              <span className="text-xs text-blue-500 font-semibold">실시간 추적</span>
-            </div>
-            <div className="w-full h-72 bg-slate-100 rounded-xl relative overflow-hidden flex items-center justify-center border border-gray-200">
-              <p className="text-xs font-bold text-gray-500 z-10 bg-white/90 backdrop-blur-xs px-4 py-2 rounded-full shadow-sm border border-gray-200">📍 지도 (OpenStreetMap / Leaflet 로딩 영역)</p>
-            </div>
+          {/* 최근 수락 환자 리스트 (동적 map 연동) */}
+<div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm space-y-3">
+  <div className="flex items-center justify-between mb-1">
+    <div className="flex items-center gap-2">
+      <h3 className="text-sm font-bold text-gray-900">최근 수락 환자</h3>
+      <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-0.5 rounded-full">
+        {acceptedPatients?.length || 0}
+      </span>
+    </div>
+  </div>
+
+  {acceptedPatients && acceptedPatients.length > 0 ? (
+    acceptedPatients.map((patient) => (
+      <div key={patient.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gray-300 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center text-xs text-gray-500 font-bold">
+            {patient.name?.[0] || '환'}
           </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <strong className="text-xs text-gray-900">{patient.name}</strong>
+              <span className="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                {patient.severity}
+              </span>
+            </div>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              {patient.symptom} · {patient.ambulance}
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <span className="text-[10px] bg-blue-100 text-blue-600 font-bold px-1.5 py-0.5 rounded">
+            도착 예정
+          </span>
+          <p className="text-xs font-bold text-gray-900 mt-1">{patient.eta}</p>
+        </div>
+      </div>
+    ))
+  ) : (
+    <p className="text-xs text-gray-400 text-center py-4">최근 수락된 환자가 없습니다.</p>
+  )}
+</div>
         </div>
 
       </div>

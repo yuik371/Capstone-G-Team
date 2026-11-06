@@ -1,0 +1,11 @@
+# Core deep-learning stack. For the verified RTX 4070/CUDA 12.8 environment:
+# pip install torch==2.11.0+cu128 torchvision==0.26.0+cu128 \
+#   --index-url https://download.pytorch.org/whl/cu128
+torch
+torchvision
+timm
+numpy
+Pillow
+# Optional but useful for extended statistical analysis outside the built-in
+# metrics implementation.
+scikit-learn

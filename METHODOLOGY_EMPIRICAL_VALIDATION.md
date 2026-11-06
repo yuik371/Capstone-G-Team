@@ -1,4 +1,4 @@
-# Chap CVPR-2027. Facial Landmark-based Multi-Modal Classification 정리
+# Facial Landmark-based Multi-Modal Classification 정리
 
 > 목표: RGB 얼굴 crop과 3D facial landmark를 결합해 얼굴 상태/표정 클래스를 분류하고, EfficientNet-B0 image-only baseline과 landmark-fused 모델을 동일한 identity-disjoint protocol에서 비교한다.
 >

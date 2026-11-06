@@ -17,6 +17,8 @@ IMAGENET_STD = (0.229, 0.224, 0.225)
 
 def make_transforms(
     image_size: int = 224,
+    *,
+    spatial_augment: bool = True,
 ) -> tuple[transforms.Compose, transforms.Compose]:
     """Return train and validation transforms for ImageNet backbones.
 
@@ -24,11 +26,16 @@ def make_transforms(
     deterministic preprocessing so metrics reflect the same input policy.
     """
 
-    train_transform = transforms.Compose(
+    train_steps = [transforms.Resize((image_size, image_size))]
+    if spatial_augment:
+        train_steps.extend(
+            [
+                transforms.RandomHorizontalFlip(p=0.5),
+                transforms.RandomRotation(degrees=15),
+            ]
+        )
+    train_steps.extend(
         [
-            transforms.Resize((image_size, image_size)),
-            transforms.RandomHorizontalFlip(p=0.5),
-            transforms.RandomRotation(degrees=15),
             transforms.ColorJitter(
                 brightness=0.20, contrast=0.20, saturation=0.15, hue=0.03
             ),
@@ -36,6 +43,7 @@ def make_transforms(
             transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
         ]
     )
+    train_transform = transforms.Compose(train_steps)
     valid_transform = transforms.Compose(
         [
             transforms.Resize((image_size, image_size)),
@@ -47,4 +55,3 @@ def make_transforms(
 
 
 __all__ = ["IMAGENET_MEAN", "IMAGENET_STD", "make_transforms"]
-

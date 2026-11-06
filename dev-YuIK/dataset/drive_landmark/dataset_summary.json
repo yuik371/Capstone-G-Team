@@ -1,0 +1,32 @@
+{
+  "root_folder_id": "199ntogVynV_ZMt3H7ZE_VE1hvw0Jjr-p",
+  "subjects": [
+    "F1350",
+    "F1351",
+    "F1352",
+    "F1353",
+    "F1354",
+    "F1355",
+    "F1356",
+    "F1357",
+    "F1358",
+    "F1359"
+  ],
+  "num_records": 210,
+  "target_field": "expression",
+  "classes": [
+    "Anger",
+    "Disgust",
+    "Fear",
+    "Joy",
+    "Neutral",
+    "Sadness",
+    "Surprise"
+  ],
+  "views": [
+    "H",
+    "L",
+    "M"
+  ],
+  "manifest": "C:\\Users\\USER.DESKTOP-IF1RABT\\Desktop\\knut-workspace\\Capstone-G-Team\\dev-YuIK\\dataset\\drive_landmark\\manifest.json"
+}

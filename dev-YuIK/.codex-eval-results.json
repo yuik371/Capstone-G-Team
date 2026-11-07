@@ -1,0 +1,93 @@
+{
+  "checkpoint": "C:\\Users\\USER.DESKTOP-IF1RABT\\Desktop\\knut-workspace\\Capstone-G-Team\\dev-YuIK\\dataset\\best_efficientnet_b0_wound.pt",
+  "device": "cpu",
+  "test": {
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
+    "balanced_accuracy": 1.0,
+    "per_class_precision": {
+      "abrasions": 1.0,
+      "bruises": 1.0,
+      "cut": 1.0,
+      "stab": 1.0
+    },
+    "per_class_recall": {
+      "abrasions": 1.0,
+      "bruises": 1.0,
+      "cut": 1.0,
+      "stab": 1.0
+    },
+    "per_class_f1": {
+      "abrasions": 1.0,
+      "bruises": 1.0,
+      "cut": 1.0,
+      "stab": 1.0
+    },
+    "per_class_support": {
+      "abrasions": 11,
+      "bruises": 11,
+      "cut": 6,
+      "stab": 3
+    },
+    "confusion_matrix": [
+      [
+        11,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        11,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        6,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        3
+      ]
+    ],
+    "loss": 0.02482810989022255,
+    "num_samples": 31
+  },
+  "predictions": [
+    {
+      "image": "C:\\Users\\USER.DESKTOP-IF1RABT\\Desktop\\knut-workspace\\Capstone-G-Team\\dev-YuIK\\test\\abrasions-30-_jpg.rf.e61dd79c32ec27c95a2870286c2a26b2.jpg",
+      "predicted_class": "abrasions",
+      "confidence": 0.9999183416366577,
+      "top_predictions": [
+        {
+          "class": "abrasions",
+          "probability": 0.9999183416366577
+        },
+        {
+          "class": "cut",
+          "probability": 4.3142739741597325e-05
+        },
+        {
+          "class": "bruises",
+          "probability": 3.2577343517914414e-05
+        },
+        {
+          "class": "stab",
+          "probability": 6.000103894621134e-06
+        }
+      ],
+      "bbox_xywh": [
+        157,
+        95,
+        312,
+        323
+      ],
+      "annotated_image": "C:\\Users\\USER.DESKTOP-IF1RABT\\Desktop\\knut-workspace\\Capstone-G-Team\\dev-YuIK\\.codex-eval-images\\abrasions-30-_jpg.rf.e61dd79c32ec27c95a2870286c2a26b2_prediction.jpg"
+    }
+  ]
+}

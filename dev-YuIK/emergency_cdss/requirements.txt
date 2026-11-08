@@ -1,0 +1,9 @@
+# Core deep-learning stack. Install a CUDA-specific torch build when the
+# target machine has a supported NVIDIA GPU; the official PyTorch selector may
+# provide a platform-specific command for that environment.
+torch
+torchvision
+timm
+numpy
+Pillow
+

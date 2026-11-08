@@ -1,0 +1,11 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.venv/
+.codex-run-venv/
+
+# Generated wound crops and experiment outputs
+dataset/**/crop_*.jpg
+dataset/training_history.json
+dataset/*.pt
+

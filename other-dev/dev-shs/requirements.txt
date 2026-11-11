@@ -1,0 +1,8 @@
+# Install a mutually compatible PyTorch/torchvision build for the target CUDA or CPU platform.
+torch
+torchvision
+numpy
+Pillow
+scipy
+scikit-learn
+matplotlib

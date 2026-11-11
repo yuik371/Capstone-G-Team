@@ -1,0 +1,322 @@
+{
+  "status": "completed",
+  "elapsed_seconds": 12310.743007799989,
+  "budget_seconds": 14400.0,
+  "device": "cuda",
+  "classes": [
+    "Anger",
+    "Disgust",
+    "Fear",
+    "Joy",
+    "Neutral",
+    "Sadness",
+    "Surprise"
+  ],
+  "samples": 210,
+  "subjects": [
+    "F1350",
+    "F1351",
+    "F1352",
+    "F1353",
+    "F1354",
+    "F1355",
+    "F1356",
+    "F1357",
+    "F1358",
+    "F1359"
+  ],
+  "folds": [
+    {
+      "fold": 1,
+      "train_groups": [
+        "F1350",
+        "F1351",
+        "F1353",
+        "F1356",
+        "F1357",
+        "F1358"
+      ],
+      "val_groups": [
+        "F1354",
+        "F1359"
+      ],
+      "test_groups": [
+        "F1352",
+        "F1355"
+      ]
+    },
+    {
+      "fold": 2,
+      "train_groups": [
+        "F1351",
+        "F1352",
+        "F1355",
+        "F1356",
+        "F1357",
+        "F1358"
+      ],
+      "val_groups": [
+        "F1350",
+        "F1353"
+      ],
+      "test_groups": [
+        "F1354",
+        "F1359"
+      ]
+    },
+    {
+      "fold": 3,
+      "train_groups": [
+        "F1352",
+        "F1354",
+        "F1355",
+        "F1356",
+        "F1358",
+        "F1359"
+      ],
+      "val_groups": [
+        "F1351",
+        "F1357"
+      ],
+      "test_groups": [
+        "F1350",
+        "F1353"
+      ]
+    },
+    {
+      "fold": 4,
+      "train_groups": [
+        "F1350",
+        "F1352",
+        "F1353",
+        "F1354",
+        "F1355",
+        "F1359"
+      ],
+      "val_groups": [
+        "F1356",
+        "F1358"
+      ],
+      "test_groups": [
+        "F1351",
+        "F1357"
+      ]
+    },
+    {
+      "fold": 5,
+      "train_groups": [
+        "F1350",
+        "F1351",
+        "F1353",
+        "F1354",
+        "F1357",
+        "F1359"
+      ],
+      "val_groups": [
+        "F1352",
+        "F1355"
+      ],
+      "test_groups": [
+        "F1356",
+        "F1358"
+      ]
+    }
+  ],
+  "models": {
+    "vision": {
+      "n": 210,
+      "accuracy": 0.7904761904761904,
+      "macro_f1": 0.7900608244532572,
+      "balanced_accuracy": 0.7904761904761906,
+      "auroc_ovr_macro": 0.9563492063492064,
+      "macro_average_precision": 0.8446989771199165,
+      "per_class_average_precision": {
+        "0": 0.7710374311390665,
+        "1": 0.8240987070468035,
+        "2": 0.8494868821339584,
+        "3": 0.8362170265225451,
+        "4": 0.9763865690025475,
+        "5": 0.6726315764437178,
+        "6": 0.9830346475507765
+      },
+      "fold_macro_f1_mean": 0.7760966204663685,
+      "fold_macro_f1_std": 0.062083164237834464,
+      "subject_bootstrap_95_ci": {
+        "subjects": 10,
+        "replicates": 2000,
+        "unit": "identity cluster",
+        "macro_f1_95_ci": [
+          0.7487256250535612,
+          0.8259363253496693
+        ],
+        "balanced_accuracy_95_ci": [
+          0.7523809523809524,
+          0.8285714285714285
+        ]
+      },
+      "lighting_strata": {
+        "highlight": {
+          "n": 70,
+          "accuracy": 0.7857142857142857,
+          "macro_f1": 0.7869191612571803,
+          "balanced_accuracy": 0.7857142857142858,
+          "auroc_ovr_macro": 0.9576190476190476,
+          "macro_average_precision": 0.8607877069431691,
+          "per_class_average_precision": {
+            "0": 0.7526098901098901,
+            "1": 0.8324771324771324,
+            "2": 0.8592600373482725,
+            "3": 0.8847008547008547,
+            "4": 0.9909090909090909,
+            "5": 0.7430569430569429,
+            "6": 0.9625
+          }
+        },
+        "lowlight": {
+          "n": 70,
+          "accuracy": 0.8142857142857143,
+          "macro_f1": 0.8127418112380519,
+          "balanced_accuracy": 0.8142857142857143,
+          "auroc_ovr_macro": 0.96,
+          "macro_average_precision": 0.8600511311750808,
+          "per_class_average_precision": {
+            "0": 0.8111507936507936,
+            "1": 0.8538980463980463,
+            "2": 0.8938559969442322,
+            "3": 0.84,
+            "4": 0.9714285714285714,
+            "5": 0.6500245098039215,
+            "6": 0.9999999999999999
+          }
+        },
+        "middlelight": {
+          "n": 70,
+          "accuracy": 0.7714285714285715,
+          "macro_f1": 0.7694328046730793,
+          "balanced_accuracy": 0.7714285714285714,
+          "auroc_ovr_macro": 0.955,
+          "macro_average_precision": 0.8595311163003326,
+          "per_class_average_precision": {
+            "0": 0.78042398214812,
+            "1": 0.8358658008658008,
+            "2": 0.9105555555555555,
+            "3": 0.8273304473304474,
+            "4": 0.9697979797979798,
+            "5": 0.7018349574953348,
+            "6": 0.9909090909090909
+          }
+        }
+      }
+    },
+    "fused": {
+      "n": 210,
+      "accuracy": 0.7952380952380952,
+      "macro_f1": 0.7954465688602885,
+      "balanced_accuracy": 0.7952380952380953,
+      "auroc_ovr_macro": 0.9576190476190476,
+      "macro_average_precision": 0.8413939841121806,
+      "per_class_average_precision": {
+        "0": 0.7468099135865979,
+        "1": 0.765920698972918,
+        "2": 0.796944402383878,
+        "3": 0.9134335362147539,
+        "4": 0.942232994828323,
+        "5": 0.7347414836078052,
+        "6": 0.9896748591909883
+      },
+      "fold_macro_f1_mean": 0.7839161025715647,
+      "fold_macro_f1_std": 0.05704673626669811,
+      "subject_bootstrap_95_ci": {
+        "subjects": 10,
+        "replicates": 2000,
+        "unit": "identity cluster",
+        "macro_f1_95_ci": [
+          0.7360741686755387,
+          0.8486914144548808
+        ],
+        "balanced_accuracy_95_ci": [
+          0.7428571428571429,
+          0.8476190476190476
+        ]
+      },
+      "lighting_strata": {
+        "highlight": {
+          "n": 70,
+          "accuracy": 0.8285714285714286,
+          "macro_f1": 0.8256046278160387,
+          "balanced_accuracy": 0.8285714285714285,
+          "auroc_ovr_macro": 0.9657142857142856,
+          "macro_average_precision": 0.8808889174950881,
+          "per_class_average_precision": {
+            "0": 0.7859065934065933,
+            "1": 0.8768786768786768,
+            "2": 0.8907142857142857,
+            "3": 0.9344827586206897,
+            "4": 0.9430122655122654,
+            "5": 0.7443187514240145,
+            "6": 0.9909090909090909
+          }
+        },
+        "lowlight": {
+          "n": 70,
+          "accuracy": 0.8142857142857143,
+          "macro_f1": 0.8128997053366802,
+          "balanced_accuracy": 0.8142857142857143,
+          "auroc_ovr_macro": 0.951904761904762,
+          "macro_average_precision": 0.8334191309036029,
+          "per_class_average_precision": {
+            "0": 0.731547619047619,
+            "1": 0.6785264735264734,
+            "2": 0.7904365079365079,
+            "3": 0.9127090301003343,
+            "4": 0.9455555555555556,
+            "5": 0.7751587301587302,
+            "6": 0.9999999999999999
+          }
+        },
+        "middlelight": {
+          "n": 70,
+          "accuracy": 0.7428571428571429,
+          "macro_f1": 0.7413698549248421,
+          "balanced_accuracy": 0.7428571428571429,
+          "auroc_ovr_macro": 0.9566666666666667,
+          "macro_average_precision": 0.8568451821083399,
+          "per_class_average_precision": {
+            "0": 0.7740015101857207,
+            "1": 0.8084126984126984,
+            "2": 0.8006806156806157,
+            "3": 0.9008866133866132,
+            "4": 0.9733333333333333,
+            "5": 0.7572681704260651,
+            "6": 0.9833333333333333
+          }
+        }
+      }
+    }
+  },
+  "deployment": {
+    "vision": {
+      "parameters_total": 4667011,
+      "parameters_trainable": 4667011,
+      "checkpoint_bytes_median": 18972331,
+      "median_ms_mean_across_folds": 11.25566999980947,
+      "median_ms_std_across_folds": 1.3734155671116324,
+      "p95_ms_mean_across_folds": 14.61196199743426,
+      "throughput_mean_across_folds": 88.89262544288135
+    },
+    "fused": {
+      "parameters_total": 7002627,
+      "parameters_trainable": 7002627,
+      "checkpoint_bytes_median": 28317659,
+      "median_ms_mean_across_folds": 11.297270000795834,
+      "median_ms_std_across_folds": 0.44032199519502624,
+      "p95_ms_mean_across_folds": 15.901871001406104,
+      "throughput_mean_across_folds": 85.58845519527209
+    }
+  },
+  "notes": [
+    "All test predictions are identity-disjoint out-of-fold predictions.",
+    "Latency values were measured on the device recorded in environment.json; they are not target-device claims unless that device matches the deployment target.",
+    "Expression labels are used because that is the target field observed in the supplied JSON schema."
+  ]
+}

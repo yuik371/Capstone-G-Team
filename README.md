@@ -26,6 +26,57 @@
 ## 4. 디렉터리 구조
 ## 5. 설치 및 준비
 ## 6. 사용 방법
+# Python 가상환경(.venv) 설정 및 패키지 설치 가이드 (Windows)
+
+프로젝트 실행 전, 로컬 PC 환경에 맞는 Python 가상환경을 생성하고 필요한 패키지를 설치하는 방법입니다.
+## 1. 문제 원인
+* 다른 OS(Mac/Linux) 또는 다른 PC에서 생성된 `.venv` 폴더는 경로 구조(`bin` vs `Scripts`)가 달라 Windows 환경에서 실행되지 않습니다. (`CommandNotFoundException` 발생)
+* 가상환경은 Git으로 공유하지 않고 **각자의 로컬 PC에서 직접 생성**해야 합니다.
+
+---
+
+## 2. 해결 및 설치 방법
+
+터미널(PowerShell)에서 프로젝트 루트 폴더(`Capstone-G-Team`)로 이동한 뒤 아래 순서대로 명령어를 실행합니다.
+
+### 1단계: 기존 가상환경 삭제 (해당되는 경우)
+이미 존재하는 `.venv` 폴더가 작동하지 않는다면 삭제 후 다시 생성합니다.
+```powershell
+Remove-Item -Recurse -Force .venv
+```
+
+### 2단계: 새 가상환경(`.venv`) 생성
+Windows 환경에 맞는 가상환경을 생성합니다.
+```powershell
+py -m venv .venv
+```
+> **참고:** `py` 명령어가 작동하지 않으면 `python -m venv .venv`를 입력하세요.
+
+### 3단계: 필수 패키지 설치 (`requirements.txt`)
+생성된 가상환경의 파이썬을 이용해 `requirements.txt`에 명시된 라이브러리를 설치합니다.
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+---
+
+## 3. VS Code 인터프리터 설정
+패키지 설치 완료 후 VS Code에서 코드를 실행하려면 방금 만든 가상환경을 연결해야 합니다.
+
+1. 단축키 `Ctrl + Shift + P`를 눌러 명령 팔레트를 엽니다.
+2. **`Python: Select Interpreter`**를 검색해 선택합니다.
+3. 목록에서 **`.\.venv\Scripts\python.exe`**를 선택합니다.
+
+---
+
+## 4. Git 업로드 시 주의사항 (`.gitignore`)
+가상환경 폴더(`.venv`)는 용량이 크고 OS마다 구조가 다르므로 Git에 커밋하지 않도록 `.gitignore` 파일에 아래 내용을 반드시 추가해 주세요.
+
+```text
+# Python virtual environment
+.venv/
+venv/
+```
 ## 7. 스크립트 상세 설명
 ## 8. 라이선스
 본 프로젝트는 MIT 라이선스를 따릅니다.

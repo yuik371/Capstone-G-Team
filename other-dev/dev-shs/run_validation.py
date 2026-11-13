@@ -7,6 +7,8 @@ Protocols (all written to a split manifest before any training starts):
   random    image-level stratified random 10-fold (deliberately leaky; Q1).
   triplet   capture-triplet-grouped random 10-fold (lighting variants kept together; Q1).
   lightout  LOSO where one lighting level is also removed from training (Q3).
+  lightmatch  size-matched control for lightout: same 126 training images per fold, but drawn
+            from all three lighting levels (one light dropped per capture triplet, balanced).
 
 No test fold is ever used for model selection, early stopping or checkpoint choice:
 there is no validation-based checkpointing at all. Every run trains for a fixed number
@@ -50,6 +52,9 @@ IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".webp"}
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
 NEUTRAL_LABEL = "Neutral"
+# Personalised ("calibration") protocol: ONE Neutral capture per subject, at this pre-declared
+# lighting level, is the reference for all of that subject's images. Fixed before any such run.
+REFERENCE_LIGHT = "middlelight"
 
 
 # --------------------------------------------------------------------------------------
@@ -59,7 +64,7 @@ NEUTRAL_LABEL = "Neutral"
 class Condition:
     arch: str  # image | mesh | scalars | fused
     flip: str  # none | naive | perm   (image-only models: "perm" just means "flip the image")
-    mesh_mode: str = "raw"  # raw | neutral
+    mesh_mode: str = "raw"  # raw | neutral (same-light Neutral) | neutral_ref (one fixed Neutral)
     shuffled: bool = False  # mesh taken from a different expression of the same subject
     epochs_from: str | None = None  # condition whose inner-CV epoch choice is reused
 
@@ -74,6 +79,7 @@ CONDITIONS: dict[str, Condition] = {
     "mesh_noflip": Condition("mesh", "none", epochs_from="mesh_raw"),
     "mesh_shuffled": Condition("mesh", "perm", shuffled=True, epochs_from="mesh_raw"),
     "mesh_neutral": Condition("mesh", "perm", mesh_mode="neutral"),
+    "mesh_neutral_ref": Condition("mesh", "perm", mesh_mode="neutral_ref", epochs_from="mesh_neutral"),
     # image + the two scalars [A, G] only
     "scalars": Condition("scalars", "perm"),
     # image + mesh MLP (late concatenation)
@@ -82,6 +88,7 @@ CONDITIONS: dict[str, Condition] = {
     "fused_noflip": Condition("fused", "none", epochs_from="fused_perm"),
     "fused_shuffled": Condition("fused", "perm", shuffled=True, epochs_from="fused_perm"),
     "fused_neutral": Condition("fused", "perm", mesh_mode="neutral"),
+    "fused_neutral_ref": Condition("fused", "perm", mesh_mode="neutral_ref", epochs_from="fused_neutral"),
 }
 # Ablation/control variants reuse the epoch count of their default configuration so that the
 # ablated factor is the only difference. Conditions listed here get their own inner CV.
@@ -329,33 +336,38 @@ class Geometry:
         self.edge_len = local_edge_lengths(self.vertices, self.edges)  # (n, N)
         self.asym = np.asarray([asymmetry_metric(v) for v in self.vertices])
         self.n, self.n_vertices = self.vertices.shape[:2]
-        # Neutral reference of the same subject under the same lighting level.
-        self.neutral_index = np.full(self.n, -1)
+        # Identity-removed representations: rigidly align each mesh to a Neutral capture of the same
+        # subject and subtract it (no template, no other subject). Two choices of reference:
+        #   neutral      the Neutral capture under the SAME lighting level (3 references per subject)
+        #   neutral_ref  ONE Neutral capture per subject, at REFERENCE_LIGHT, for all of its images
+        self.reference_index = {
+            "neutral": self._neutral_reference(same_light=True),
+            "neutral_ref": self._neutral_reference(same_light=False),
+        }
+        self.neutral_feats = {mode: self._neutral_features(index) for mode, index in self.reference_index.items()}
+        self._cache: dict[tuple[str, str], Any] = {}
+        self.flip_info: dict[str, dict[str, Any]] = {}
+
+    def _neutral_reference(self, same_light: bool) -> np.ndarray:
+        index = np.full(self.n, -1)
         for i in range(self.n):
+            light = self.lights[i] if same_light else REFERENCE_LIGHT
             match = np.flatnonzero(
-                (self.subjects == self.subjects[i])
-                & (self.lights == self.lights[i])
-                & (self.labels_text == NEUTRAL_LABEL)
+                (self.subjects == self.subjects[i]) & (self.lights == light) & (self.labels_text == NEUTRAL_LABEL)
             )
             if len(match) != 1:
                 raise ValueError(f"Expected exactly one Neutral reference for sample {i}, found {len(match)}")
-            self.neutral_index[i] = match[0]
-        # Identity-removed representation: rigidly align each mesh to its Neutral reference and
-        # subtract it. Uses only that subject's own Neutral capture (no template, no other subject).
-        self.neutral_disp = np.zeros_like(self.vertices)
+            index[i] = match[0]
+        return index
+
+    def _neutral_features(self, index: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        disp = np.zeros_like(self.vertices)
         for i in range(self.n):
-            reference = self.vertices[self.neutral_index[i]]
-            self.neutral_disp[i] = rigid_align(self.vertices[i], reference) - reference
-        self.neutral_edge = self.edge_len - self.edge_len[self.neutral_index]
-        self.neutral_scal = np.stack(
-            [
-                self.asym - self.asym[self.neutral_index],
-                np.sqrt(np.mean(np.sum(self.neutral_disp**2, axis=2), axis=1)),
-            ],
-            axis=1,
-        )
-        self._cache: dict[tuple[str, str], Any] = {}
-        self.flip_info: dict[str, dict[str, Any]] = {}
+            reference = self.vertices[index[i]]
+            disp[i] = rigid_align(self.vertices[i], reference) - reference
+        edge = self.edge_len - self.edge_len[index]
+        scal = np.stack([self.asym - self.asym[index], np.sqrt(np.mean(np.sum(disp**2, axis=2), axis=1))], axis=1)
+        return disp, edge, scal
 
     def features(self, train_idx: np.ndarray, mesh_mode: str) -> dict[str, tuple[np.ndarray, np.ndarray]]:
         """Standardised mesh inputs for the views {none, perm, naive}.
@@ -393,16 +405,12 @@ class Geometry:
                 np.concatenate([v_naive, self.edge_len[..., None]], axis=2),
                 np.stack([self.asym, shift(v_naive)], axis=1),
             )
-        elif mesh_mode == "neutral":
-            views["none"] = (
-                np.concatenate([self.neutral_disp, self.neutral_edge[..., None]], axis=2),
-                self.neutral_scal,
-            )
+        elif mesh_mode in self.neutral_feats:
+            disp, edge, scal = self.neutral_feats[mesh_mode]
+            views["none"] = (np.concatenate([disp, edge[..., None]], axis=2), scal)
             views["perm"] = (
-                np.concatenate(
-                    [mirror_permuted(self.neutral_disp, perm), self.neutral_edge[:, perm][..., None]], axis=2
-                ),
-                self.neutral_scal,
+                np.concatenate([mirror_permuted(disp, perm), edge[:, perm][..., None]], axis=2),
+                scal,
             )
         else:
             raise ValueError(f"Unknown mesh mode: {mesh_mode}")
@@ -530,7 +538,9 @@ def build_jobs(samples: list[Sample], seeds: list[int], inner_seed: int) -> dict
     triplets = np.asarray([s.triplet for s in samples])
     stems = np.asarray([s.stem for s in samples])
     outer = loso_folds(subjects)
-    jobs: dict[str, list[Job]] = {"inner": [], "loso": [], "random": [], "triplet": [], "lightout": []}
+    jobs: dict[str, list[Job]] = {"inner": [], "loso": [], "random": [], "triplet": [], "lightout": [],
+                                  "lightmatch": []}
+    light_names = sorted(set(lights.tolist()))
     for fold, train, test in outer:
         for j, fit, val in inner_folds(subjects, train, inner_seed + int(fold)):
             for condition in INNER_CONDITIONS:
@@ -549,6 +559,16 @@ def build_jobs(samples: list[Sample], seeds: list[int], inner_seed: int) -> dict
                         Job("lightout", condition, seed, f"{fold}.{light}", keep, test, 0,
                             {"outer_fold": fold, "held_out_light": light})
                     )
+            # Size-matched control for lightout: drop ONE lighting variant from every training capture
+            # triplet, each light dropped equally often -> 126 images spread over all three lights.
+            # Own generator, so the partitions of the other protocols are untouched.
+            rng = np.random.default_rng([seed, int(fold), 126])
+            train_triplets = np.unique(triplets[train])
+            dropped = np.resize(np.arange(len(light_names)), len(train_triplets))[rng.permutation(len(train_triplets))]
+            drop_light = dict(zip(train_triplets.tolist(), (light_names[d] for d in dropped)))
+            keep = train[np.asarray([lights[i] != drop_light[triplets[i]] for i in train])]
+            for condition in LIGHT_CONDITIONS:
+                jobs["lightmatch"].append(Job("lightmatch", condition, seed, fold, keep, test, 0, {"outer_fold": fold}))
         for protocol, units in (("random", stems), ("triplet", triplets)):
             assignment = stratified_group_folds(units, labels, seed * 7 + (protocol == "triplet"))
             for k in range(10):
@@ -585,12 +605,18 @@ def check_splits(samples: list[Sample], jobs: dict[str, list[Job]]) -> None:
         for job in job_list:
             if set(job.train_idx.tolist()) & set(job.test_idx.tolist()):
                 raise AssertionError(f"Sample overlap in {job.key}")
-            if protocol in {"inner", "loso", "lightout"} and set(subjects[job.train_idx]) & set(subjects[job.test_idx]):
+            if protocol in {"inner", "loso", "lightout", "lightmatch"} and set(subjects[job.train_idx]) & set(subjects[job.test_idx]):
                 raise AssertionError(f"Subject leakage in {job.key}")
             if protocol == "triplet" and set(triplets[job.train_idx]) & set(triplets[job.test_idx]):
                 raise AssertionError(f"Triplet leakage in {job.key}")
             if protocol == "lightout" and job.meta["held_out_light"] in set(lights[job.train_idx]):
                 raise AssertionError(f"Held-out light present in training: {job.key}")
+            if protocol == "lightmatch":
+                counts = np.unique(lights[job.train_idx], return_counts=True)[1]
+                if len(counts) != 3 or len(set(counts.tolist())) != 1:
+                    raise AssertionError(f"Lighting levels are not balanced in {job.key}: {counts}")
+                if len(job.train_idx) != 2 * len(set(triplets[job.train_idx])):
+                    raise AssertionError(f"Expected exactly two lights per training triplet in {job.key}")
 
 
 # --------------------------------------------------------------------------------------
@@ -749,10 +775,18 @@ def load_done(path: Path) -> dict[str, dict[str, Any]]:
     done: dict[str, dict[str, Any]] = {}
     if path.exists():
         with path.open("r", encoding="utf-8") as handle:
-            for line in handle:
-                if line.strip():
+            for number, line in enumerate(handle, start=1):
+                # An interrupted append (crash, power loss, sync) can leave NUL padding or a
+                # truncated record; skip it so the job is simply re-run instead of aborting.
+                line = line.strip().strip("\x00").strip()
+                if not line:
+                    continue
+                try:
                     record = json.loads(line)
-                    done[record["key"]] = record
+                except json.JSONDecodeError:
+                    print(f"[warn] {path.name}:{number} unreadable record skipped (job will re-run)", flush=True)
+                    continue
+                done[record["key"]] = record
     return done
 
 
@@ -819,7 +853,7 @@ def assign_epochs(jobs: dict[str, list[Job]], selection: dict[str, dict[str, int
     def source(condition: str) -> str:
         return CONDITIONS[condition].epochs_from or condition
 
-    for protocol in ("loso", "lightout"):
+    for protocol in ("loso", "lightout", "lightmatch"):
         for job in jobs[protocol]:
             job.epochs = selection[source(job.condition)][job.meta["outer_fold"]]
     # Non-subject-disjoint protocols have no clean training-subject set to select on; they reuse
@@ -871,7 +905,7 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, default=Path("results/cvpr2027"))
     parser.add_argument("--label-key", default="expression")
     parser.add_argument("--stage", default="all",
-                        choices=("manifest", "inner", "loso", "splits", "lightout", "all"))
+                        choices=("manifest", "inner", "loso", "splits", "lightout", "lightmatch", "all"))
     parser.add_argument("--seeds", type=int, nargs="+", default=[2027, 2028, 2029, 2030, 2031])
     parser.add_argument("--inner-seed", type=int, default=2027)
     parser.add_argument("--batch-size", type=int, default=16)
@@ -929,6 +963,7 @@ def main() -> None:
         "weights": args.weights,
         "image_epoch_grid": list(IMAGE_EPOCH_GRID),
         "mesh_epoch_grid": list(MESH_EPOCH_GRID),
+        "reference_light": REFERENCE_LIGHT,
         "conditions": {name: vars(c) for name, c in CONDITIONS.items()},
         "split_manifest_sha256": manifest_hash,
         "smoke": args.smoke,
@@ -982,7 +1017,8 @@ def main() -> None:
         selection = select_epochs(jobs["inner"], inner_results, labels, out_dir)
     assign_epochs(jobs, selection)
     check = {}
-    for protocol, names in (("loso", ("loso",)), ("splits", ("random", "triplet")), ("lightout", ("lightout",))):
+    for protocol, names in (("loso", ("loso",)), ("splits", ("random", "triplet")), ("lightout", ("lightout",)),
+                            ("lightmatch", ("lightmatch",))):
         if stage not in {protocol, "all"}:
             continue
         for name in names:

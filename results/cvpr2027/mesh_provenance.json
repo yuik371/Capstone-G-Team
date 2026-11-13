@@ -1,0 +1,90 @@
+{
+  "data_root": "dev-YuIK/안면_인식_랜드마크_Sample",
+  "json_vs_obj": {
+    "files_compared": 210,
+    "obj_vertex_lines_per_file": [
+      2440
+    ],
+    "json_vertices_per_file": 1220,
+    "max_abs_difference_first_block_vs_json": 0.0,
+    "files_with_identical_first_block": 210,
+    "files_with_identical_face_list": 210,
+    "second_vertex_block": {
+      "files_with_second_block": 210,
+      "all_z_zero": true,
+      "xy_min": [
+        0.49800003,
+        3.7295997
+      ],
+      "xy_max": [
+        99.5015,
+        90.0876
+      ],
+      "identical_in_all_files": true,
+      "max_abs_difference_between_files": 0.0,
+      "r2_affine_fit_from_3d_xy_median": 0.9769265883239504,
+      "r2_affine_fit_from_3d_xy_min": 0.9641370110628619
+    }
+  },
+  "variation_across_lighting": {
+    "capture_triplets": 70,
+    "light_pairs_compared": 210,
+    "bit_identical_pairs": 0,
+    "raw_units_rms_vertex_distance": {
+      "n": 210,
+      "min": 0.020174418641082038,
+      "median": 0.12046124960621249,
+      "mean": 0.16663640971403765,
+      "max": 0.6858488450575125
+    },
+    "raw_units_mean_rms_radius_of_a_mesh": 5.646564805290403,
+    "normalised_after_rigid_alignment": {
+      "same_subject_same_expression_different_light": {
+        "n": 210,
+        "min": 0.003085578803169512,
+        "median": 0.016182997989208678,
+        "mean": 0.0220776671412222,
+        "max": 0.08522891519144511
+      },
+      "same_subject_same_light_different_expression": {
+        "n": 630,
+        "min": 0.011867517387377676,
+        "median": 0.09192284113360738,
+        "mean": 0.0964434609045964,
+        "max": 0.20070099840975877
+      },
+      "same_expression_same_light_different_subject": {
+        "n": 945,
+        "min": 0.00940989738531665,
+        "median": 0.04926990408190727,
+        "mean": 0.053395472064230926,
+        "max": 0.14412458427315758
+      }
+    },
+    "ratio_light_to_expression_median": 0.17604980209094195,
+    "ratio_expression_to_identity_median": 1.8656996161549861
+  },
+  "systematic_lighting_effect": {
+    "highlight_vs_lowlight": {
+      "mean_pairwise_cosine_between_subject_fields": 0.014644476952511113,
+      "null_mean": 0.0017641994512698708,
+      "null_95th_percentile": 0.15662552794331142,
+      "permutation_p_one_sided": 0.312343828085957,
+      "note": "approximate: the triplet-swap null treats triplets of one subject as exchangeable units"
+    },
+    "highlight_vs_middlelight": {
+      "mean_pairwise_cosine_between_subject_fields": 0.0024676086392905576,
+      "null_mean": 0.0024928933892851514,
+      "null_95th_percentile": 0.14350801868951368,
+      "permutation_p_one_sided": 0.3968015992003998,
+      "note": "approximate: the triplet-swap null treats triplets of one subject as exchangeable units"
+    },
+    "lowlight_vs_middlelight": {
+      "mean_pairwise_cosine_between_subject_fields": 0.09855681443008844,
+      "null_mean": 0.00230564906799926,
+      "null_95th_percentile": 0.1561398268262498,
+      "permutation_p_one_sided": 0.12143928035982009,
+      "note": "approximate: the triplet-swap null treats triplets of one subject as exchangeable units"
+    }
+  }
+}

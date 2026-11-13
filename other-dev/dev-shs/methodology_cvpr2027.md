@@ -1,255 +1,369 @@
-# What can 10 subjects tell us? A controlled evaluation study of RGB and 3D-mesh expression classification
+# 피험자 10명으로 무엇을 말할 수 있는가? RGB와 3D 메시 표정 분류에 대한 통제된 평가 연구
 
-*Method, executed experiments, results and limitations. Every number below is copied from a saved
-artifact under `results/cvpr2027/`; the file is named next to each table.*
+*방법, 수행한 실험, 결과, 한계를 정리한 문서입니다. 아래의 모든 수치는 `results/cvpr2027/`에 저장된
+산출물에서 옮긴 것이며, 표마다 출처 파일을 적었습니다.*
 
-## 1. Scope and claims
+표정 이름(Anger, Neutral 등), 조명 이름(`highlight`, `middlelight`, `lowlight`), 프로토콜 이름(`random`,
+`triplet`, `loso`, `lightout`, `lightmatch`), 조건 이름(`image_flip` 등)은 데이터와 코드의 표기를 그대로 씁니다.
 
-This is a study of **experimental design**, not a new method and not a state-of-the-art claim.
-It uses only the public *sample* of the AI-Hub face-landmark dataset: 10 subjects (F1350–F1359),
-7 instructed expressions, 3 lighting levels, 210 images. The full dataset was not available, and
-nothing here says anything about it.
+## 1. 범위와 주장
 
-The first version of this work claimed that fusing a 3D mesh with the image improves expression
-classification. That claim was not supported (79.05% vs 79.52% pooled accuracy, 13 vs 14 discordant
-images; `results/legacy_5fold_v1/`). It is replaced by three questions that 10 subjects *can*
-inform, and one secondary question:
+이 연구는 **실험 설계**에 대한 연구입니다. 새로운 방법을 제안하지 않으며 최고 성능을 주장하지도 않습니다.
+AI-Hub 안면 랜드마크 데이터셋의 공개 *샘플*만 사용했습니다. 피험자 10명(F1350–F1359), 지시된 표정 7종,
+조명 3단계, 이미지 210장입니다. 전체 데이터셋은 구할 수 없었고, 이 문서의 어떤 내용도 전체 데이터셋에 대한
+것이 아닙니다.
 
-- **Q1.** How much does an image-level random split inflate accuracy compared with subject-disjoint evaluation?
-- **Q2.** Does the mesh carry expression information, and does it still do so after identity is removed?
-- **Q3.** How well does each model generalise to a lighting level it never saw in training?
-- **Secondary.** Does image + mesh fusion beat the image alone? This is claimed only if the 95% interval
-  of the paired subject-level difference excludes zero.
+이 연구의 첫 버전은 3D 메시를 이미지와 융합하면 표정 분류가 좋아진다고 주장했습니다. 그 주장은 뒷받침되지
+않았습니다(통합 정확도 79.05% 대 79.52%, 불일치 이미지 13장 대 14장, `results/legacy_5fold_v1/`). 그래서
+피험자 10명으로 답할 *수 있는* 질문 세 개와 부차 질문 하나로 바꿨습니다.
 
-The labels are *instructed (posed) expression categories*. The task is recovering the instructed
-category, not recognising felt emotion.
+- **Q1.** 이미지 단위 무작위 분할은 피험자 분리 평가에 비해 정확도를 얼마나 부풀리는가?
+- **Q2.** 메시는 표정 정보를 담고 있는가, 그리고 신원을 제거한 뒤에도 그런가?
+- **Q3.** 각 모델은 학습에서 한 번도 보지 못한 조명 단계에 얼마나 잘 일반화하는가?
+- **부차 질문.** 이미지 + 메시 융합이 이미지 단독보다 나은가? 피험자 단위 대응 차이의 95% 구간이 0을
+  포함하지 않을 때에만 그렇다고 주장합니다.
 
-## 2. Data and mesh provenance
+문서 전체에서 두 가지 사용 상황을 구분합니다.
 
-Each image `F13xx_<expr>_1_<light>.png` (1440×1080 RGB) has a JSON annotation with the same stem
-that holds `expression`, `light`, and a `3Dlandmark` array of 1,220 vertices with a `face` list of
-2,304 triangles. The topology is identical in all 210 files. `age`, `gender` and `id` are present
-and never used as inputs; `light` is used only for splitting and reporting. The folder layout is
-documented in `README.md`; the data itself is not in the repository.
+- **블라인드 인식** (7.1–7.5절): 모델은 한 번도 본 적 없는 사람의 RGB 이미지 1장, 또는 이미지 1장과 그
+  메시를 받습니다. 이미지 단독 EfficientNet-B0가 기준 모델입니다.
+- **개인화 인식** (7.6절): 모델은 추가로 새 사람의 *라벨이 붙은 Neutral 캡처 1장*을 받습니다. 이것은 다른,
+  더 쉬운 문제입니다. 이 수치를 블라인드 수치와 같은 과제인 것처럼 비교하지 않습니다.
 
-A capture **triplet** is the three lighting variants of one subject × expression. There are 70
-triplets, 7 per subject.
+융합 대비는 13개 조건의 실험을 돌리기 전에 유일한 사전 지정 비교로 정해 두었습니다. 나머지 대비는 모두
+기술적(descriptive)이며, 대비 묶음마다 Holm 보정 p값을 보고합니다.
 
-**Provenance check** (`mesh_provenance.py` → `results/cvpr2027/mesh_provenance.json`):
+라벨은 *지시된(연출된) 표정 범주*입니다. 과제는 지시된 범주를 맞히는 것이지, 실제로 느낀 감정을 인식하는
+것이 아닙니다.
 
-| Check | Result |
+## 2. 데이터와 메시의 출처
+
+각 이미지 `F13xx_<표정>_1_<조명>.png`(1440×1080 RGB)에는 같은 이름의 JSON 주석이 있고, 여기에 `expression`,
+`light`, 그리고 정점 1,220개의 `3Dlandmark` 배열과 삼각형 2,304개의 `face` 목록이 들어 있습니다. 위상
+구조는 210개 파일 모두에서 동일합니다. `age`, `gender`, `id`도 있지만 입력으로 쓰지 않습니다. `light`는
+분할과 보고에만 씁니다. 폴더 구조는 `README.md`에 정리했고, 데이터 자체는 저장소에 없습니다.
+
+캡처 **triplet**은 한 피험자 × 한 표정의 세 조명 이미지를 말합니다. 모두 70개이고 피험자당 7개입니다.
+
+**출처 점검** (`mesh_provenance.py` → `results/cvpr2027/mesh_provenance.json`):
+
+| 점검 항목 | 결과 |
 |---|---|
-| JSON `3Dlandmark` vs first 1,220 `v` lines of the same-stem OBJ | bit-identical in 210 / 210 files (max abs difference 0.0); face lists identical in 210 / 210 |
-| Remaining 1,220 `v` lines of each OBJ | `z = 0` everywhere, coordinates in about [0.5, 99.5] × [3.7, 90.1], **identical in all 210 files** |
-| Same subject, same expression, different light: bit-identical mesh pairs | 0 of 210 pairs |
-| RMS vertex distance after rigid alignment (normalised units), median | different light 0.016; different expression 0.092; different subject 0.049 |
-| Light-to-expression ratio of those medians | 0.18 |
-| Is the light-to-light displacement field shared across subjects? (mean pairwise cosine; triplet-swap permutation p) | H–L 0.015 (p = 0.31), H–M 0.002 (p = 0.40), L–M 0.099 (p = 0.12) |
+| JSON `3Dlandmark`와 같은 이름 OBJ의 처음 1,220개 `v` 줄 비교 | 210 / 210 파일에서 비트 단위로 동일 (최대 절대 차이 0.0), face 목록도 210 / 210 동일 |
+| 각 OBJ의 나머지 1,220개 `v` 줄 | 모든 곳에서 `z = 0`, 좌표 범위는 약 [0.5, 99.5] × [3.7, 90.1], **210개 파일 모두 동일** |
+| 같은 피험자, 같은 표정, 다른 조명에서 비트 단위로 동일한 메시 쌍 | 210쌍 중 0쌍 |
+| 강체 정렬 후 정점 RMS 거리(정규화 단위), 중앙값 | 조명이 다를 때 0.016, 표정이 다를 때 0.092, 피험자가 다를 때 0.049 |
+| 위 중앙값의 조명 대 표정 비율 | 0.18 |
+| 조명 간 변위장이 피험자들 사이에 공통인가? (평균 쌍별 코사인, triplet 교환 순열 p) | H–L 0.015 (p = 0.31), H–M 0.002 (p = 0.40), L–M 0.099 (p = 0.12) |
 
-What this implies:
+이것이 뜻하는 바는 다음과 같습니다.
 
-1. **The OBJ adds nothing.** The JSON vertices are a copy of the OBJ vertices. There is no second,
-   independent 3D measurement to validate the mesh against. The extra OBJ block is a constant 2D
-   layout shared by every file (most plausibly a texture/UV template), not per-image data.
-2. **Each image has its own mesh.** The mesh is not one scan per expression reused for the three
-   lighting images. The three meshes of a triplet differ by about 18% of a typical
-   expression-to-expression difference, with no detectable common direction across subjects.
-3. **Scan or fit is still unknown.** A fixed 1,220-vertex topology with an exact left–right vertex
-   correspondence (46 midline vertices, 587 mirrored pairs; `flip_permutation.json`) means the mesh
-   is a *registered template*, not a raw scan. Whether that template was registered to a depth
-   capture or fitted to the RGB image cannot be decided from these files. Per-image variation is
-   consistent with either (three separate captures, or three separate fits). If it was fitted from
-   the image, the mesh is a re-encoding of pixel information, and "RGB + 3D" is not two modalities.
-   We could not rule this out, so no multimodality claim is made.
-4. **Consequence for the experiments.** Because the three meshes of a triplet are near-duplicates,
-   a mesh model evaluated with an image-level random split sees an almost identical copy of each
-   test mesh during training. Q1 measures this directly.
+1. **OBJ는 아무것도 더하지 않습니다.** JSON 정점은 OBJ 정점의 복사본입니다. 메시를 검증할 수 있는 독립적인
+   두 번째 3D 측정값이 없습니다. OBJ의 추가 블록은 모든 파일이 공유하는 고정된 2D 배치이며(텍스처/UV
+   템플릿일 가능성이 가장 높습니다), 이미지별 데이터가 아닙니다.
+2. **이미지마다 자기 메시가 있습니다.** 표정마다 스캔 하나를 세 조명 이미지에 재사용한 것이 아닙니다. 한
+   triplet의 세 메시는 표정 간 차이의 약 18%만큼 서로 다르고, 피험자들 사이에 공통된 방향은 검출되지
+   않았습니다.
+3. **스캔인지 피팅인지는 여전히 알 수 없습니다.** 정점 1,220개의 고정 위상에 정확한 좌우 정점 대응(정중선
+   정점 46개, 대칭 쌍 587개, `flip_permutation.json`)이 있다는 것은 이 메시가 원시 스캔이 아니라 *등록된
+   템플릿*이라는 뜻입니다. 그 템플릿을 깊이 촬영에 등록했는지 RGB 이미지에 피팅했는지는 이 파일들만으로
+   판단할 수 없습니다. 이미지마다 메시가 다르다는 사실은 두 경우 모두와 맞습니다(촬영 3회, 또는 피팅 3회).
+   이미지에서 피팅한 것이라면 메시는 픽셀 정보를 다시 부호화한 것이고, "RGB + 3D"는 두 개의 모달리티가
+   아닙니다. 이 가능성을 배제할 수 없었으므로 다중 모달리티 주장은 하지 않습니다.
+4. **실험에 미치는 결과.** 한 triplet의 세 메시가 거의 복제본이므로, 이미지 단위 무작위 분할로 평가한 메시
+   모델은 각 테스트 메시의 거의 동일한 사본을 학습에서 봅니다. Q1이 이것을 직접 측정합니다.
 
-## 3. Evaluation protocols
+## 3. 평가 프로토콜
 
-All partitions for all protocols and seeds are written to `split_manifest.csv` **before any
-training starts**; its SHA-256 is stored in `environment.json`. The script asserts that no
-subject (or triplet, or held-out light) crosses a partition that is supposed to exclude it.
+모든 프로토콜과 시드의 분할은 **학습을 시작하기 전에** `split_manifest.csv`에 기록하고, 그 SHA-256을
+`environment.json`에 저장합니다. 스크립트는 분리되어야 할 피험자(또는 triplet, 또는 제외한 조명)가 분할
+경계를 넘지 않는지 검사합니다.
 
-**Leave-one-subject-out (LOSO, primary).** 10 folds. Each fold trains on 9 subjects (189 images)
-and tests on the remaining subject (21 images). There is no validation partition.
+**피험자 단위 교차검증 (LOSO, 주 프로토콜).** 10 fold입니다. fold마다 피험자 9명(189장)으로 학습하고 남은
+피험자 1명(21장)으로 평가합니다. 검증 분할은 없습니다.
 
-**Fixed training length, chosen by inner cross-validation on training subjects only.** For each
-outer fold, the 9 training subjects are split into 3 inner folds of 3 subjects. For each candidate
-epoch count a model is trained on 6 subjects and scored on the other 3. The epoch count with the
-highest mean inner accuracy is selected (ties → fewer epochs) and used to retrain on all 9
-subjects. Candidates: 10 / 20 / 30 epochs for models with an image encoder, 25 / 50 / 100 / 200
-for the mesh-only MLP. The held-out test subject takes no part in this choice. Selection results:
-`epoch_selection.csv`. Ablation and control variants reuse the epoch count of their default
-configuration, so that the ablated factor is the only difference.
+**학습 피험자만으로 내부 교차검증을 해서 고른 고정 학습 길이.** 바깥 fold마다 학습 피험자 9명을 3명씩 내부
+fold 3개로 나눕니다. 후보 epoch 수마다 6명으로 학습하고 나머지 3명으로 채점합니다. 내부 평균 정확도가 가장
+높은 epoch 수를 고르고(동률이면 더 적은 쪽), 그 값으로 9명 전체를 다시 학습합니다. 후보는 이미지 인코더가
+있는 모델은 10 / 20 / 30 epoch, 메시 단독 MLP는 25 / 50 / 100 / 200 epoch입니다. 보류한 테스트 피험자는 이
+선택에 전혀 관여하지 않습니다. 선택 결과는 `epoch_selection.csv`에 있습니다. ablation과 대조 변형은 기본
+구성의 epoch 수를 그대로 써서, 바꾼 요인만 차이가 나도록 했습니다.
 
-**No checkpoint selection.** Every run trains for its fixed number of epochs and is evaluated once
-with its **final-epoch weights**. No checkpoints are saved, and no test or validation score
-influences which weights are reported.
+**체크포인트 선택 없음.** 모든 실행은 정해진 epoch 수만큼 학습하고 **마지막 epoch 가중치**로 한 번만
+평가합니다. 체크포인트를 저장하지 않으며, 어떤 테스트 점수나 검증 점수도 보고할 가중치의 선택에 영향을 주지
+않습니다.
 
-**Step-based schedule.** The learning rate follows a cosine from 3e-4 to 0 over
-`epochs × ceil(n_train / 16)` optimiser steps. It depends on the step count only, never on
-wall-clock time, so every model in a fold gets the same schedule on any hardware.
+**스텝 기반 스케줄.** 학습률은 `epochs × ceil(n_train / 16)`번의 옵티마이저 스텝에 걸쳐 3e-4에서 0까지
+코사인으로 줄어듭니다. 스텝 수에만 의존하고 실제 경과 시간에는 의존하지 않으므로, 어떤 하드웨어에서든 한 fold의
+모든 모델이 같은 스케줄을 받습니다.
 
-**Seeds.** Five seeds (2027–2031) for every LOSO condition. The LOSO partition is deterministic, so
-seeds vary initialisation of the new layers, data order and augmentation. Within one seed and
-fold, all conditions share the same data order and augmentation draws (common random numbers),
-which makes paired comparisons tighter.
+**시드.** 모든 LOSO 조건에 시드 5개(2027–2031)를 씁니다. LOSO 분할은 결정적이므로 시드는 새 층의 초기화,
+데이터 순서, 증강을 바꿉니다. 한 시드와 한 fold 안에서는 모든 조건이 같은 데이터 순서와 같은 증강 난수를
+공유하므로(공통 난수) 대응 비교가 더 정밀해집니다.
 
-**No cross-fold ensembles.** Models trained in different folds are never combined and scored
-out-of-fold: a fold-*k* model has trained on the test subjects of every other fold, so such an
-ensemble would not be subject-disjoint.
+**fold 간 앙상블 없음.** 서로 다른 fold에서 학습한 모델을 합쳐 fold 밖으로 채점하지 않습니다. fold *k*의
+모델은 다른 모든 fold의 테스트 피험자로 학습했으므로, 그런 앙상블은 피험자 분리가 되지 않습니다.
 
-**Split comparison (Q1).** Two deliberately weaker protocols with the same train/test sizes
-(189 / 21 per fold, 10 folds, 5 seeds, a new partition per seed):
-- `random`: image-level split stratified by expression. The same person, and usually the other
-  lighting variants of the same capture, are in training.
-- `triplet`: the three lighting variants of a capture are kept together, but the person is still
-  in training.
+**분할 비교 (Q1).** 학습/테스트 크기가 같은(fold마다 189 / 21, 10 fold, 시드 5개, 시드마다 새 분할) 의도적으로
+약한 프로토콜 두 개입니다.
+- `random`: 표정으로 층화한 이미지 단위 분할입니다. 같은 사람이 학습에 있고, 대개 같은 캡처의 다른 조명
+  이미지도 있습니다.
+- `triplet`: 한 캡처의 세 조명 이미지를 한 묶음으로 두지만, 그 사람은 여전히 학습에 있습니다.
 
-These protocols have no clean set of "training subjects", so they reuse the lower median of the
-LOSO-selected epoch counts for the same model.
+이 프로토콜들에는 "학습 피험자"라는 깨끗한 집합이 없으므로, 같은 모델에 대해 LOSO가 고른 epoch 수의 아래쪽
+중앙값을 다시 씁니다.
 
-**Leave-one-light-out (Q3).** Inside each LOSO fold, one lighting level is also removed from
-training (9 subjects × 2 lights = 126 images). The model is tested on all 21 images of the
-held-out subject, which gives accuracy on the unseen light and on the two seen lights. Epoch
-counts are those selected for the same outer fold. 3 lights × 10 folds × 5 seeds.
+**조명 하나를 뺀 학습 (Q3).** 각 LOSO fold 안에서 조명 단계 하나도 학습에서 뺍니다(피험자 9명 × 조명 2개 =
+126장). 모델은 보류한 피험자의 21장 전체로 평가하므로, 미관측 조명에서의 정확도와 본 두 조명에서의 정확도가
+함께 나옵니다. epoch 수는 같은 바깥 fold에 대해 고른 값입니다. 조명 3개 × 10 fold × 시드 5개입니다.
 
-## 4. Inputs
+**학습량을 맞춘 조명 대조군 (`lightmatch`).** 조명 제외 모델은 LOSO 모델과 두 가지가 동시에 다릅니다. 조명
+단계 하나를 본 적이 없고, 189장이 아니라 126장으로 학습했습니다. 둘을 분리하기 위해 각 LOSO fold에서 세 조명을
+모두 포함하는 126장으로 세 번째 모델을 학습합니다. 모든 학습 캡처 triplet에서 조명 이미지를 하나씩 빼되 각
+조명을 같은 횟수만큼 뺍니다(조명당 42장). epoch 수가 같으므로 옵티마이저 스텝 수도 조명 제외 모델과 같습니다.
+같은 테스트 이미지에서 "미관측 조명 − 학습량 맞춤"이 학습 세트 크기가 같을 때 그 조명 단계를 본 적이 없다는
+것만의 효과입니다. 10 fold × 시드 5개입니다.
 
-**Image.** Short side resized to 256 (bicubic), centre crop 224, ImageNet normalisation. Training
-augmentation: horizontal flip (p = 0.5) and per-image brightness (±20%), contrast (±20%) and
-saturation (±15%) jitter. Test images get no augmentation.
+## 4. 입력
 
-**Mesh.** Each mesh is median-centred and divided by its RMS radius. Per vertex the input is
-`[x, y, z, ℓ]`, where ℓ is the mean length of the edges incident to that vertex. Two scalars are
-appended: **A**, the symmetric Chamfer distance between the mesh and its x-mirror, and **G**, the RMS
-distance to a mean template after rotation-only Procrustes alignment. The template is the mean
-mesh of the **training** samples of that fold (training identities weighted equally). All mesh
-inputs are standardised per feature with the training-set mean and standard deviation.
+**이미지.** 짧은 변을 256으로 리사이즈(bicubic)하고 가운데 224를 잘라낸 뒤 ImageNet 정규화를 적용합니다.
+학습 증강은 수평 반전(p = 0.5)과 이미지별 밝기(±20%), 대비(±20%), 채도(±15%) 변화입니다. 테스트 이미지에는
+증강을 적용하지 않습니다. 얼굴 검출에 따른 crop은 하지 않습니다.
 
-**Identity-removed mesh (`neutral` mode).** Each mesh is rigidly aligned to the *Neutral* mesh of
-the same subject under the same lighting level, and that Neutral mesh is subtracted. The inputs
-become per-vertex displacement, the change in ℓ, the change in A, and the RMS displacement. This
-uses a labelled Neutral capture of the test subject, so it is **not** a blind test-time procedure,
-and Neutral samples become (near-)zero vectors that are trivially recognisable. Accuracy without
-the Neutral class is therefore reported alongside.
+**메시.** 각 메시는 중앙값으로 중심을 맞추고 RMS 반경으로 나눕니다. 정점마다 입력은 `[x, y, z, ℓ]`이고, ℓ은
+그 정점에 연결된 간선들의 평균 길이입니다. 여기에 스칼라 두 개를 덧붙입니다. **A**는 메시와 그 x 거울상 사이의
+대칭 Chamfer 거리이고, **G**는 회전만 허용한 Procrustes 정렬 후 평균 템플릿까지의 RMS 거리입니다. 템플릿은 그
+fold의 **학습** 샘플의 평균 메시입니다(학습 신원에 같은 가중치). 모든 메시 입력은 학습 세트의 평균과
+표준편차로 특징마다 표준화합니다.
 
-**Horizontal flip of the mesh.** The first version negated x but left the vertex order unchanged,
-which puts left-side anatomy at right-side indices; it also fitted G with a rotation-only alignment
-of a mirror-image mesh. The corrected flip:
+**신원을 제거한 메시 (`neutral` 모드).** 각 메시를 같은 피험자의 같은 조명 단계 *Neutral* 메시에 강체 정렬한
+뒤 그 Neutral 메시를 뺍니다. 입력은 정점별 변위, ℓ의 변화, A의 변화, RMS 변위가 됩니다. 이 방식은 테스트
+피험자의 라벨이 붙은 Neutral 캡처를 쓰므로 블라인드 테스트 절차가 **아니며**, Neutral 샘플은 (거의) 0
+벡터가 되어 쉽게 알아볼 수 있습니다. 그래서 Neutral 클래스를 뺀 정확도를 함께 보고합니다.
 
-1. Mirror the training template in x and match it one-to-one to itself with the Hungarian
-   algorithm (`scipy.optimize.linear_sum_assignment` on squared distances).
-2. Verify that the resulting permutation is an involution (applying it twice gives the identity);
-   the run aborts otherwise.
-3. Flip a mesh by negating x **and** re-indexing vertices by the permutation; recompute ℓ and G
-   for the flipped mesh.
+**기준 1개 메시 (`neutral_ref` 모드, 개인화 프로토콜).** 위 모드는 사람마다 라벨이 붙은 Neutral 캡처가 조명
+단계별로 하나씩, 모두 세 장 필요합니다. 개인화 프로토콜은 한 장만 필요합니다. `middlelight`의 Neutral 캡처(이
+실험을 돌리기 전에 코드에 고정)가 그 피험자의 메시 21개 전부에 대해, 세 조명 모두에서 기준이 됩니다. 그 캡처가
+**보정용 샘플**입니다. 다른 피험자의 학습 fold에는 그대로 남지만, 보류한 피험자에 대해서는 어떤 모델에서도
+**채점하지 않습니다**. 개인화 비교는 기준이 없는 모델과 개인화 모델 모두 같은 200장(피험자당 20장)을 씁니다.
+한 피험자의 나머지 Neutral 캡처 두 장(다른 조명)은 일반 테스트 샘플이며, 기준으로부터의 변위가 작지만 0은
+아닙니다.
 
-Result (`flip_permutation.json`): the permutation is an involution in all 10 LOSO training
-templates, identical across folds, with 46 fixed (midline) vertices and 587 swapped pairs; the
-matching residual is 0.004 against a template RMS radius of 0.99; Hungarian and nearest-neighbour
-matching agree.
+**메시의 수평 반전.** 첫 버전은 x의 부호만 바꾸고 정점 순서는 그대로 두었습니다. 그러면 왼쪽 해부 구조가
+오른쪽 인덱스에 놓입니다. 또 거울상 메시에 회전만 허용한 정렬로 G를 구했습니다. 고친 반전은 다음과 같습니다.
 
-## 5. Models and conditions
+1. 학습 템플릿을 x로 뒤집고, 헝가리안 알고리즘(제곱 거리에 대한 `scipy.optimize.linear_sum_assignment`)으로
+   자기 자신과 일대일 대응시킵니다.
+2. 얻은 순열이 대합(두 번 적용하면 항등)인지 확인합니다. 아니면 실행을 중단합니다.
+3. x의 부호를 바꾸고 **그리고** 순열로 정점 인덱스를 다시 매겨 메시를 뒤집습니다. 뒤집은 메시에 대해 ℓ과 G를
+   다시 계산합니다.
 
-Image encoder: ImageNet-initialised EfficientNet-B0, fine-tuned end to end. Mesh branch: an MLP on
-the flattened 1,220 × 4 + 2 inputs (512 → LayerNorm → GELU → dropout → 128). Fusion is late
-concatenation of a 256-d image projection and the 128-d mesh code. Optimiser: AdamW (weight decay
-1e-4), batch 16, class-weighted cross-entropy with label smoothing 0.05, FP32.
+결과(`flip_permutation.json`): 순열은 LOSO 학습 템플릿 10개 모두에서 대합이고 fold 간에 동일하며, 고정
+정점(정중선) 46개와 교환 쌍 587개가 있습니다. 대응 잔차는 템플릿 RMS 반경 0.99에 대해 0.004이고, 헝가리안
+대응과 최근접 이웃 대응이 일치합니다.
 
-| Condition | Inputs | Flip | Purpose |
+## 5. 모델과 조건
+
+이미지 인코더는 ImageNet으로 초기화한 EfficientNet-B0이며 전체를 미세조정합니다. 메시 가지는 펼친 1,220 × 4 +
+2 입력에 대한 MLP입니다(512 → LayerNorm → GELU → dropout → 128). 융합은 256차원 이미지 투영과 128차원 메시
+코드를 뒤에서 이어 붙입니다. 옵티마이저는 AdamW(가중치 감쇠 1e-4), 배치 16, 손실은 클래스 가중 교차
+엔트로피에 label smoothing 0.05, 정밀도는 FP32입니다.
+
+| 조건 | 입력 | 반전 | 목적 |
 |---|---|---|---|
-| `image_flip` | image | image | image-only baseline |
-| `image_noflip` | image | none | flip ablation |
-| `mesh_raw` | mesh | permuted | mesh-only baseline (Q2) |
-| `mesh_naiveflip` / `mesh_noflip` | mesh | naive / none | flip ablation |
-| `mesh_shuffled` | mesh of a *different expression* of the same subject and light | permuted | negative control: must be near chance |
-| `mesh_neutral` | Neutral-subtracted mesh | permuted | Q2 after identity removal |
-| `scalars` | image + [A, G] only | permuted | do the two scalars alone help? |
-| `fused_perm` | image + mesh | permuted | fusion |
-| `fused_naiveflip` / `fused_noflip` | image + mesh | naive / none | flip ablation |
-| `fused_shuffled` | image + shuffled mesh | permuted | does fusion use the mesh's expression content? |
-| `fused_neutral` | image + Neutral-subtracted mesh | permuted | fusion after identity removal |
+| `image_flip` | 이미지 | 이미지 | 이미지 단독 기준 모델 |
+| `image_noflip` | 이미지 | 없음 | 반전 ablation |
+| `mesh_raw` | 메시 | 순열 | 메시 단독 기준 모델 (Q2) |
+| `mesh_naiveflip` / `mesh_noflip` | 메시 | 단순 / 없음 | 반전 ablation |
+| `mesh_shuffled` | 같은 피험자, 같은 조명의 *다른 표정* 메시 | 순열 | 음성 대조군: 우연 수준에 가까워야 함 |
+| `mesh_neutral` | Neutral을 뺀 메시 | 순열 | 신원 제거 후의 Q2 |
+| `mesh_neutral_ref` | 고정된 Neutral 기준 1개를 뺀 메시 | 순열 | 개인화 프로토콜, 메시 단독 |
+| `scalars` | 이미지 + [A, G]만 | 순열 | 스칼라 두 개만으로 도움이 되는가? |
+| `fused_perm` | 이미지 + 메시 | 순열 | 융합 |
+| `fused_naiveflip` / `fused_noflip` | 이미지 + 메시 | 단순 / 없음 | 반전 ablation |
+| `fused_shuffled` | 이미지 + 셔플 메시 | 순열 | 융합이 메시의 표정 내용을 쓰는가? |
+| `fused_neutral` | 이미지 + Neutral을 뺀 메시 | 순열 | 신원 제거 후의 융합 |
+| `fused_neutral_ref` | 이미지 + 고정된 Neutral 기준 1개를 뺀 메시 | 순열 | 개인화 프로토콜, 융합 |
 
-In the shuffled controls the donor expression is redrawn at random for every training sample and
-fixed (seeded) at test time. A shuffled mesh still tells the model which expression the sample is
-*not*, so its ceiling is slightly above 1/7.
+셔플 대조군에서 기증 표정은 학습 샘플마다 매번 무작위로 다시 뽑고, 테스트 때는 시드로 고정합니다. 셔플 메시도
+그 샘플이 어떤 표정이 *아닌지*는 알려 주므로, 상한은 1/7보다 조금 높습니다.
 
-## 6. Statistics
+## 6. 통계
 
-- **Unit of analysis: the subject.** Predictions are reduced to one accuracy per held-out subject
-  (averaged over seeds). All intervals and tests use those 10 values or 10 paired differences.
-  The 210 images are never treated as independent.
-- **Paired differences** are reported with the mean, Cohen's d_z, a 95% subject-bootstrap interval
-  (10,000 resamples), a 95% t interval (9 d.f.), an exact sign-flip permutation p-value, a Wilcoxon
-  signed-rank p-value, and the count of subjects won / lost / tied.
-- **Low power, stated plainly.** With 10 pairs the smallest possible two-sided sign-flip p-value is
-  0.002, the bootstrap with 10 clusters is known to be too narrow, and a non-significant test is
-  not evidence of no effect. Holm-adjusted p-values are given because many contrasts are reported.
-- **Seeds**: accuracy is also reported as mean ± SD over the 5 seeds. That SD measures training
-  noise only, not uncertainty about new subjects.
-- **Capture triplets**: for lighting questions, comparisons are made within subject, and the
-  fraction of triplets whose three lighting variants receive the same prediction is reported.
-- **Calibration**: expected calibration error (10 bins) per seed on the pooled out-of-fold
-  predictions. It pools 10 different fold models and is a coarse estimate.
+- **분석 단위는 피험자입니다.** 예측을 보류한 피험자마다 정확도 하나로 줄입니다(시드에 대해 평균). 모든 구간과
+  검정은 그 10개 값, 또는 10개의 대응 차이를 씁니다. 이미지 210장을 독립 표본으로 취급하지 않습니다.
+- **대응 차이**는 평균, Cohen의 d_z, 95% 피험자 부트스트랩 구간(재표집 10,000회), 95% t 구간(자유도 9), 정확
+  부호 반전 순열 p값, Wilcoxon 부호 순위 p값, 이긴 / 진 / 비긴 피험자 수와 함께 보고합니다.
+- **낮은 검정력을 그대로 밝힙니다.** 10쌍에서 가능한 가장 작은 양측 부호 반전 p값은 0.002이고, 군집 10개의
+  부트스트랩은 실제보다 좁게 나오는 것으로 알려져 있으며, 유의하지 않은 검정은 효과가 없다는 증거가 아닙니다.
+  대비를 많이 보고하므로 Holm 보정 p값을 함께 제시합니다.
+- **시드**: 정확도는 시드 5개에 대한 평균 ± SD로도 보고합니다. 그 SD는 학습 잡음만 재며, 새 피험자에 대한
+  불확실성은 재지 않습니다.
+- **캡처 triplet**: 조명에 관한 질문에서는 피험자 안에서 비교하고, 세 조명 이미지가 같은 예측을 받은 triplet의
+  비율을 보고합니다.
+- **보정(calibration)**: 시드마다 fold 밖 예측을 모아 기대 보정 오차(구간 10개)를 구합니다. 서로 다른 fold
+  모델 10개를 합친 것이라 거친 추정치입니다.
 
-## 7. Results
+## 7. 결과
 
-⟨pending: filled in from `results/cvpr2027/RESULTS.md` once the sweep and analysis have finished⟩
+모든 수치는 `results/cvpr2027/RESULTS.md`(`analyze_results.py`가 생성)에서 옮겼습니다. 그 파일에 전체 표, 모든
+대비, 클래스별 재현율이 있습니다. 정확도는 시드 5개에 대한 평균 ± SD입니다. 차이는 피험자 단위 대응
+비교(n = 10)이며 95% 피험자 부트스트랩 구간과, 해당 대비 묶음에 대해 Holm 보정한 정확 부호 반전 p값을 함께
+적었습니다. 우연 수준은 14.3%입니다.
 
-## 8. Limitations
+### 7.1 블라인드 인식, LOSO (`RESULTS.md` 1–3절)
 
-- **10 identities.** Every estimate is about these 10 people. Intervals are wide, tests are weak,
-  and one unusual subject moves a mean by several points. All subject IDs start with `F`; the
-  sample's demographic spread was not analysed and cannot be assumed to be representative.
-- **Sample only.** Nothing here transfers to the full AI-Hub dataset without rerunning on it.
-- **The mesh is required at inference.** Every mesh-using model consumes the dataset's own 3D
-  annotation. The repository contains no method to obtain that mesh from a camera image, so these
-  models cannot run on RGB alone.
-- **No end-to-end latency.** The first version reported network-forward latency only. Mesh
-  acquisition, image decoding and preprocessing were not measured, and mesh acquisition would
-  dominate. No latency or edge-deployment claim is made, and no latency was re-measured.
-- **Mesh origin unknown** (Section 2). The mesh may be derived from the image.
-- **Neutral subtraction needs a labelled Neutral capture** of the test subject, at the same
-  lighting level.
-- **Posed labels.** Categories are instructed poses; Anger/Sadness-type confusions may reflect
-  ambiguous posing as much as model error.
-- **Epoch selection is noisy.** The inner CV scores 3 subjects per fold; the selected epoch count
-  varies between outer folds for that reason.
-- **One architecture, one hyper-parameter setting.** No pretrained FER backbone, no
-  FLAME/DECA/SMIRK expression parameters, no graph/mesh network, no early or attention fusion. A
-  null result for this late-concatenation model says nothing about those.
-- **Not corrected for everything.** Many contrasts are reported from one small dataset; treat them
-  as descriptive.
-- **Data governance.** The face images and meshes were committed to this repository earlier and
-  are still in its history (see `README.md`).
+| 모델 | 정확도 % | 최저 / 최고 피험자 % |
+|---|---|---|
+| 이미지 단독 (EfficientNet-B0, ImageNet 초기화, 기준 모델) | 83.0 ± 2.0 | 72.4 / 92.4 |
+| 메시 단독 | 75.9 ± 1.1 | 49.5 / 90.5 |
+| 융합 (이미지 + 메시) | 83.1 ± 1.0 | 68.6 / 100.0 |
+| 이미지 + [A, G] 스칼라 | 82.1 ± 1.8 | 73.3 / 88.6 |
+| 융합, 셔플 메시 (대조군) | 78.4 ± 2.9 | 61.0 / 87.6 |
+| 메시 단독, 셔플 메시 (대조군) | 17.4 ± 1.4 | 12.4 / 21.0 |
 
-## 9. What changed from the first version (`results/legacy_5fold_v1/`)
+- **부차 질문: 융합 이득은 없습니다.** 융합 − 이미지 단독 = +0.1 pp, 95% CI [−6.0, +6.4], 피험자 4명은
+  나아졌고 6명은 나빠졌습니다. 사전에 정한 기준을 충족하지 못했습니다. 구간이 넓어서 쓸 만한 이득도, 실제
+  손실도 그 안에 들어갑니다. 이것은 "보이지 못했다"이지 "0임을 보였다"가 아닙니다.
+- **융합 모델의 오류는 줄어든 것이 아니라 달라졌습니다.** 이미지 단독에 비해 Anger 재현율은 오르고
+  (68.7 → 77.3%), Sadness(81.3 → 66.0%)와 Disgust(77.3 → 64.7%)는 내려갑니다.
+- **반전 처리 방식은 측정 가능한 차이를 만들지 않았습니다.** 반전 대비 일곱 개 모두 |차이| ≤ 1.0 pp입니다.
+- **피험자 간 편차가 큽니다.** 특히 메시가 그렇습니다(49.5–90.5%). `fig_per_subject.png`에 피험자별 정확도와
+  이미지 단독 기준 모델에 대한 대응 차이가 있습니다.
 
-| First version | Now |
+### 7.2 Q1: 분할 프로토콜 (`RESULTS.md` 4절)
+
+| 모델 | random | triplet | loso |
+|---|---|---|---|
+| 이미지 단독 | 92.0 ± 0.8 | 61.0 ± 1.8 | 83.0 ± 2.0 |
+| 메시 단독 | 95.1 ± 1.0 | 77.2 ± 0.8 | 75.9 ± 1.1 |
+| 융합 | 93.4 ± 1.5 | 71.1 ± 2.7 | 83.1 ± 1.0 |
+
+이미지 단위 무작위 분할은 피험자 분리 정확도를 +9.0 pp(이미지), +19.2 pp(메시), +10.3 pp(융합)만큼
+부풀립니다. 셋 모두 Holm 보정 후에도 유의합니다(p ≤ 0.047). 부풀림은 메시에서 가장 크며, 이는 2절에서 예상한
+대로입니다(한 캡처 triplet 안의 메시들이 거의 복제본).
+
+`triplet`은 중간 단계 프로토콜이 **아닙니다**. 보류 캡처 350개 모두에서 그 피험자는 학습에 12~18장 들어
+있지만 보류된 표정으로는 한 장도 없습니다. 그래서 그 신원은 틀린 라벨과만 함께 관측됩니다. 이미지 모델은
+LOSO보다 22.0 pp *낮고*(Holm p = 0.018), 메시 모델은 움직이지 않습니다(+1.3 pp). 우리는 이를 신원에 대해
+적대적인 분할로 보고하며, 분할 구조와 일치하는 설명으로 제시합니다. 그 기전을 따로 검증하지는 않았습니다.
+
+### 7.3 Q2: 메시에 담긴 표정 정보 (`RESULTS.md` 2절)
+
+메시 단독은 우연 수준보다 훨씬 높고(+61.6 pp, 피험자 10명 전원), 셔플 메시 대조군은 우연 수준에
+가깝습니다(17.4%). 따라서 메시는 표정 정보를 담고 있습니다. 같은 조명의 Neutral 메시를 빼면 메시 단독 정확도가
++15.3 pp [+8.5, +22.8] 오릅니다(피험자 9명 개선, 악화 없음, Holm p = 0.0625로 대비 18개에 대해 보정한 뒤에는
+0.05 수준에서 유의하지 않음). 이 변형은 사람마다 Neutral 캡처가 세 장 필요하고 자기 자신이 기준인 0 벡터도
+채점하므로, 공정한 평가는 7.6절에 있습니다.
+
+### 7.4 Q3: 미관측 조명 단계 (`RESULTS.md` 5절)
+
+제외한 조명 세 개에 대한 평균이며, 같은 테스트 이미지로 비교했습니다.
+
+| 모델 | 미관측 조명 − 전체 조명으로 학습 (189장) | 미관측 조명 − 학습량 맞춤 (126장, 전체 조명) | 학습량 맞춤 − 전체 조명 |
+|---|---|---|---|
+| 이미지 단독 | −6.2 pp [−10.5, −2.5] | +0.4 pp [−1.9, +2.6] | −6.6 pp [−9.4, −3.6] |
+| 메시 단독 | −1.1 pp [−3.0, +0.5] | −0.4 pp [−3.2, +2.5] | −0.8 pp [−2.7, +1.2] |
+| 융합 | −1.0 pp [−3.1, +1.1] | −0.3 pp [−2.0, +1.3] | −0.7 pp [−2.3, +1.1] |
+
+미관측 조명에서 이미지 모델이 6.2 pp 떨어지는 것은, 단순히 189장 대신 126장으로 학습했을 때 떨어지는
+폭(−6.6 pp)과 같습니다. 학습 세트 크기가 같으면, 그 조명 단계를 본 적이 없다는 사실은 측정 가능한 손실을
+만들지 않습니다(+0.4 pp). **어떤 모델에서도 조명이 새롭다는 것의 효과는 검출되지 않았고, 조명 불변성 주장은
+하지 않습니다.** 이 샘플의 세 조명 단계는 차이가 크지 않고, 구간은 몇 포인트에 걸쳐 있으며, Holm 보정 후
+유의한 것은 없습니다. 데이터가 보여 주는 것은, 학습 이미지의 3분의 1을 잃는 데 가장 민감한 것이 이미지
+모델이라는 점입니다.
+
+### 7.5 보정 (`RESULTS.md` 1절, `fig_reliability.png`)
+
+ECE는 4.6%(이미지), 9.4%(메시), 4.3%(융합)입니다. 보정 기법은 적용하지 않았습니다. 구간별 표본 수는 그림에
+표기했습니다. 예측이 약 20개보다 적은 구간은 해석할 수 없습니다.
+
+### 7.6 개인화 인식: 사람마다 Neutral 기준 1개 (`RESULTS.md` 7절)
+
+모든 모델을 같은 200장으로 채점했습니다(각 피험자의 기준 캡처는 제외).
+
+| 모델 | 테스트 때의 기준 | 정확도 % | 비Neutral 이미지 % | 최저 / 최고 피험자 % |
+|---|---|---|---|---|
+| 이미지 단독 | 없음 | 83.4 ± 1.9 | 82.2 ± 2.2 | 73.0 / 94.0 |
+| 메시 단독 | 없음 | 75.7 ± 1.2 | 74.1 ± 1.3 | 52.0 / 90.0 |
+| 융합 | 없음 | 82.3 ± 1.0 | 80.4 ± 1.1 | 67.0 / 100.0 |
+| 메시 단독, Neutral 기준 1개 | Neutral 캡처 1장 | 91.9 ± 0.5 | 91.0 ± 0.6 | 85.0 / 100.0 |
+| 융합, Neutral 기준 1개 | Neutral 캡처 1장 | 91.0 ± 0.7 | 90.0 ± 0.8 | 83.0 / 100.0 |
+
+| 대비 | 차이 | 95% CI | 승 / 패 / 무 | Holm p |
+|---|---|---|---|---|
+| 개인화 메시 단독 − 원본 메시 단독 | +16.2 pp | [+9.6, +23.3] | 9 / 0 / 1 | 0.023 |
+| 개인화 메시 단독 − 이미지 단독 | +8.5 pp | [+3.8, +13.3] | 9 / 1 / 0 | 0.039 |
+| 개인화 융합 − 이미지 단독 | +7.6 pp | [+5.4, +9.7] | 9 / 0 / 1 | 0.023 |
+| 개인화 융합 − 원본 융합 | +8.7 pp | [+2.5, +14.9] | 6 / 4 / 0 | 0.105 |
+
+- 새 사람의 Neutral 캡처 한 장이 있으면 메시 변위만으로 91.9%에 이르고, 피험자 10명 중 9명에서 기준이 없는
+  이미지 기준 모델을 앞섭니다.
+- **이미지는 그 위에 아무것도 더하지 않습니다**(융합 91.0% 대 메시 단독 91.9%). 따라서 이것은 융합에 대한
+  결과가 아니라 메시 표현에 대한 결과입니다.
+- `middlelight`에서 얻은 기준 하나가 다른 두 조명 단계에서도 통하고(거기서 92.3%, 기준 조명에서 91.0%), 같은
+  조명 기준 세 개를 쓸 때보다 나쁘지 않습니다(비Neutral 이미지에서 +1.2 pp).
+- 이것은 이미지 기준 모델에 대한 동등한 조건의 승리가 **아닙니다**. 개인화 모델은 테스트 인물에 대한 라벨된
+  정보를 추가로 받고, 이들이 쓰는 메시는 데이터셋의 주석이며(8절), 이미지 기준 모델에는 그에 상응하는
+  개인화를 주지 않았습니다. 개인화 조건은 첫 실험 결과를 본 뒤에 추가했으므로, 사전 등록한 검정이 아니라 후속
+  실험입니다.
+
+## 8. 한계
+
+- **신원 10명.** 모든 추정치는 이 10명에 대한 것입니다. 구간은 넓고, 검정은 약하며, 특이한 피험자 한 명이
+  평균을 몇 포인트 움직입니다. 피험자 ID는 모두 `F`로 시작합니다. 샘플의 인구통계 분포는 분석하지 않았고,
+  대표성이 있다고 가정할 수 없습니다.
+- **샘플만 사용.** 전체 AI-Hub 데이터셋에서 다시 돌리지 않는 한, 여기의 어떤 결과도 그쪽으로 옮겨 갈 수
+  없습니다.
+- **추론에 메시가 필요합니다.** 메시를 쓰는 모든 모델은 데이터셋 자체의 3D 주석을 입력으로 받습니다. 저장소에는
+  카메라 이미지에서 그 메시를 얻는 방법이 없으므로, 이 모델들은 RGB만으로는 실행할 수 없습니다.
+- **전체 과정 지연 시간 없음.** 첫 버전은 네트워크 순전파 지연만 보고했습니다. 메시 획득, 이미지 디코딩,
+  전처리는 측정하지 않았고, 메시 획득이 대부분을 차지할 것입니다. 지연 시간이나 엣지 배포에 대한 주장은 하지
+  않으며, 지연 시간을 다시 측정하지도 않았습니다.
+- **메시의 출처를 알 수 없음** (2절). 메시가 이미지에서 유도된 것일 수 있습니다.
+- **Neutral 차감에는 테스트 피험자의 라벨이 붙은 Neutral 캡처가 필요합니다.** `neutral`은 조명 단계마다 한
+  장, `neutral_ref`는 모두 한 장입니다. 기준이 불완전하거나 라벨이 없을 때(약간 중립이 아닌 얼굴) 결과가
+  얼마나 견고한지는 시험하지 않았습니다.
+- **개인화 비교는 비대칭입니다.** 이미지 기반 개인화(예: Neutral 이미지 특징 차감)는 시도하지 않았으므로,
+  "메시 변위가 이미지를 앞선다"는 기준이 없는 이미지 모델에 대해서만 성립합니다.
+- **기준 조명은 한 번만 정했습니다.** `middlelight`를 미리 고정했고, 다른 두 선택은 돌리지 않았습니다.
+- **연출된 라벨.** 범주는 지시된 표정입니다. Anger/Sadness 유형의 혼동은 모델 오류만큼이나 모호한 연출을
+  반영할 수 있습니다.
+- **Epoch 선택에는 잡음이 있습니다.** 내부 CV는 fold마다 피험자 3명으로 채점하며, 그 때문에 선택된 epoch 수가
+  바깥 fold마다 다릅니다.
+- **아키텍처 하나, 하이퍼파라미터 설정 하나.** 사전학습된 표정 인식 백본, FLAME/DECA/SMIRK 표정 파라미터,
+  그래프/메시 신경망, 초기 융합이나 어텐션 융합은 쓰지 않았습니다. 이 후기 연결(late concatenation) 모델에서
+  효과가 없었다는 결과는 그것들에 대해 아무것도 말해 주지 않습니다.
+- **모든 것을 보정하지는 않았습니다.** 작은 데이터셋 하나에서 많은 대비를 보고합니다. 기술적인 결과로 다뤄
+  주세요.
+- **데이터 관리.** 얼굴 이미지와 메시는 이전에 이 저장소에 커밋된 적이 있고 아직 이력에 남아 있습니다
+  (`README.md` 참고).
+
+## 9. 첫 버전(`results/legacy_5fold_v1/`)에서 달라진 점
+
+| 첫 버전 | 현재 |
 |---|---|
-| 5-fold, 6 train / 2 val / 2 test subjects | 10-fold leave-one-subject-out, no validation subjects |
-| Best-validation-F1 checkpoint (42 validation images) | Fixed epochs from inner CV on training subjects; final-epoch weights |
-| Cosine schedule driven by wall-clock time; 99–141 epochs per run | Cosine schedule driven by optimiser steps |
-| 1 seed | 5 seeds |
-| Vision vs fused only | 13 conditions incl. mesh-only, scalars-only, shuffled and Neutral-subtracted controls |
-| Flip negated x without permuting vertices | Verified left–right permutation; three-way flip ablation |
-| Per-model bootstrap CIs over pooled images | Subject-level paired differences with CIs and exact tests |
-| Latency table | Removed (no end-to-end measurement) |
-| Hue jitter and CPU PIL augmentation | Brightness/contrast/saturation jitter on GPU (no hue) |
-| Raw mesh coordinates fed to the MLP | Mesh inputs standardised with training-set statistics |
+| 5-fold, 학습 6명 / 검증 2명 / 테스트 2명 | 10-fold LOSO, 검증 피험자 없음 |
+| 검증 F1이 가장 높은 체크포인트 (검증 이미지 42장) | 학습 피험자에 대한 내부 CV로 고른 고정 epoch, 마지막 epoch 가중치 |
+| 실제 경과 시간으로 구동되는 코사인 스케줄, 실행마다 99–141 epoch | 옵티마이저 스텝으로 구동되는 코사인 스케줄 |
+| 시드 1개 | 시드 5개 |
+| 이미지 대 융합만 | 15개 조건: 메시 단독, 스칼라만, 셔플, Neutral 차감, 기준 1개 개인화 변형 포함 |
+| 정점 순열 없이 x 부호만 바꾼 반전 | 검증된 좌우 순열, 세 가지 반전 ablation |
+| 이미지를 합친 모델별 부트스트랩 CI | CI와 정확 검정을 갖춘 피험자 단위 대응 차이 |
+| 지연 시간 표 | 삭제 (전체 과정 측정이 없음) |
+| 색조 변화와 CPU PIL 증강 | GPU에서 밝기/대비/채도 변화 (색조 없음) |
+| 원시 메시 좌표를 MLP에 입력 | 학습 세트 통계로 표준화한 메시 입력 |
 
-The legacy numbers are kept only as the record of what was first reported. They are not comparable
-with the tables above (different folds, selection rule, schedule and input scaling).
+이전 수치는 처음에 무엇을 보고했는지에 대한 기록으로만 남겨 둡니다. 위의 표들과 비교할 수 없습니다(fold, 선택
+규칙, 스케줄, 입력 스케일이 다릅니다).
 
-## 10. Reproduction
+## 10. 재현
 
-See `README.md`. Environment, seeds, hyper-parameters and the git commit of the run are in
-`results/cvpr2027/environment.json`; per-run logs (seed, epochs, optimiser steps, per-epoch
-training loss, test probabilities, seconds) are in `results/cvpr2027/logs/runs.jsonl`.
+`README.md`를 참고하세요. 환경, 시드, 하이퍼파라미터, 실행 시점의 git 커밋은
+`results/cvpr2027/environment.json`에 있고, 실행별 로그(시드, epoch, 옵티마이저 스텝, epoch별 학습 손실, 테스트
+확률, 소요 시간)는 `results/cvpr2027/logs/runs.jsonl`에 있습니다.
 
-## References
+## 참고문헌
 
 1. M. Tan and Q. V. Le. "EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks." ICML 2019. [arXiv:1905.11946](https://arxiv.org/abs/1905.11946).
 2. G. C. Cawley and N. L. C. Talbot. "On Over-fitting in Model Selection and Subsequent Selection Bias in Performance Evaluation." JMLR 11, 2010.

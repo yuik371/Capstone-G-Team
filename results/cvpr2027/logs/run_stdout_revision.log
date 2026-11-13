@@ -1,0 +1,33 @@
+{"event": "manifest_written", "sha256": "3ca52e5d3634feaa809e677f518c0e18433cb548e342f29598bf6b06cf0bb6eb", "jobs": {"inner": 600, "loso": 750, "random": 150, "triplet": 150, "lightout": 450, "lightmatch": 150}, "flip_involution": true, "flip_identical_across_folds": true}
+[inner] 600 done, 0 to run
+[loso] 650 done, 100 to run
+[loso] 10/100 elapsed 0.3 min, eta 2.7 min (last: loso|mesh_neutral_ref|2027|10|E100, 5.55s)
+[loso] 20/100 elapsed 0.6 min, eta 2.3 min (last: loso|mesh_neutral_ref|2028|10|E100, 4.74s)
+[loso] 30/100 elapsed 0.9 min, eta 2.0 min (last: loso|mesh_neutral_ref|2029|10|E100, 6.07s)
+[loso] 40/100 elapsed 1.1 min, eta 1.7 min (last: loso|mesh_neutral_ref|2030|10|E100, 4.83s)
+[loso] 50/100 elapsed 1.4 min, eta 1.4 min (last: loso|mesh_neutral_ref|2031|10|E100, 5.17s)
+[loso] 60/100 elapsed 4.3 min, eta 2.8 min (last: loso|fused_neutral_ref|2027|10|E10, 9.0s)
+[loso] 70/100 elapsed 7.1 min, eta 3.1 min (last: loso|fused_neutral_ref|2028|10|E10, 9.14s)
+[loso] 80/100 elapsed 10.0 min, eta 2.5 min (last: loso|fused_neutral_ref|2029|10|E10, 9.07s)
+[loso] 90/100 elapsed 12.9 min, eta 1.4 min (last: loso|fused_neutral_ref|2030|10|E10, 9.07s)
+[loso] 100/100 elapsed 15.7 min, eta 0.0 min (last: loso|fused_neutral_ref|2031|10|E10, 9.03s)
+[random] 150 done, 0 to run
+[triplet] 150 done, 0 to run
+[lightout] 450 done, 0 to run
+[lightmatch] 0 done, 150 to run
+[lightmatch] 10/150 elapsed 0.6 min, eta 7.9 min (last: lightmatch|mesh_raw|2027|10|E25, 1.03s)
+[lightmatch] 20/150 elapsed 1.1 min, eta 7.3 min (last: lightmatch|mesh_raw|2028|10|E25, 1.01s)
+[lightmatch] 30/150 elapsed 1.7 min, eta 6.8 min (last: lightmatch|mesh_raw|2029|10|E25, 1.02s)
+[lightmatch] 40/150 elapsed 2.3 min, eta 6.3 min (last: lightmatch|mesh_raw|2030|10|E25, 1.06s)
+[lightmatch] 50/150 elapsed 2.9 min, eta 5.7 min (last: lightmatch|mesh_raw|2031|10|E25, 1.08s)
+[lightmatch] 60/150 elapsed 5.2 min, eta 7.8 min (last: lightmatch|fused_perm|2027|05|E30, 17.87s)
+[lightmatch] 70/150 elapsed 7.2 min, eta 8.2 min (last: lightmatch|fused_perm|2027|10|E10, 6.11s)
+[lightmatch] 80/150 elapsed 9.5 min, eta 8.3 min (last: lightmatch|fused_perm|2028|05|E30, 17.76s)
+[lightmatch] 90/150 elapsed 11.5 min, eta 7.7 min (last: lightmatch|fused_perm|2028|10|E10, 6.19s)
+[lightmatch] 100/150 elapsed 13.9 min, eta 6.9 min (last: lightmatch|fused_perm|2029|05|E30, 17.96s)
+[lightmatch] 110/150 elapsed 15.8 min, eta 5.7 min (last: lightmatch|fused_perm|2029|10|E10, 6.01s)
+[lightmatch] 120/150 elapsed 18.2 min, eta 4.5 min (last: lightmatch|fused_perm|2030|05|E30, 17.73s)
+[lightmatch] 130/150 elapsed 20.1 min, eta 3.1 min (last: lightmatch|fused_perm|2030|10|E10, 6.0s)
+[lightmatch] 140/150 elapsed 22.5 min, eta 1.6 min (last: lightmatch|fused_perm|2031|05|E30, 17.86s)
+[lightmatch] 150/150 elapsed 24.5 min, eta 0.0 min (last: lightmatch|fused_perm|2031|10|E10, 5.99s)
+{"event": "stage_complete", "stage": "all", "written": {"loso": 750, "random": 150, "triplet": 150, "lightout": 450, "lightmatch": 150}}

@@ -1,17 +1,149 @@
 {
+  "written_utc": "2026-11-13T06:58:26Z",
+  "git_commit": "d65ee2df367af2fe36769213d5391b0be8634037",
+  "command": "run_validation.py --stage all",
   "python": "3.14.7",
   "platform": "Windows-11-10.0.26200-SP0",
   "torch": "2.15.0+cu132",
   "torchvision": "0.29.2+cu132",
   "numpy": "2.5.4",
   "scipy": "1.18.1",
-  "scikit_learn": "1.9.1",
-  "matplotlib": "3.11.2",
   "pillow": "13.0.0",
   "device": "cuda",
   "cuda_name": "NVIDIA GeForce RTX 3060",
-  "seed": 2027,
+  "mixed_precision": false,
+  "seeds": [
+    2027,
+    2028,
+    2029,
+    2030,
+    2031
+  ],
+  "inner_seed": 2027,
+  "batch_size": 16,
+  "learning_rate": 0.0003,
+  "optimizer": "AdamW(weight_decay=1e-4), step-based cosine to 0, no warm-up",
+  "loss": "class-weighted cross-entropy, label_smoothing=0.05",
   "weights": "imagenet",
-  "budget_hours": 4.0,
-  "eval_reserve_fraction": 0.15
+  "image_epoch_grid": [
+    10,
+    20,
+    30
+  ],
+  "mesh_epoch_grid": [
+    25,
+    50,
+    100,
+    200
+  ],
+  "reference_light": "middlelight",
+  "conditions": {
+    "image_flip": {
+      "arch": "image",
+      "flip": "perm",
+      "mesh_mode": "raw",
+      "shuffled": false,
+      "epochs_from": null
+    },
+    "image_noflip": {
+      "arch": "image",
+      "flip": "none",
+      "mesh_mode": "raw",
+      "shuffled": false,
+      "epochs_from": "image_flip"
+    },
+    "mesh_raw": {
+      "arch": "mesh",
+      "flip": "perm",
+      "mesh_mode": "raw",
+      "shuffled": false,
+      "epochs_from": null
+    },
+    "mesh_naiveflip": {
+      "arch": "mesh",
+      "flip": "naive",
+      "mesh_mode": "raw",
+      "shuffled": false,
+      "epochs_from": "mesh_raw"
+    },
+    "mesh_noflip": {
+      "arch": "mesh",
+      "flip": "none",
+      "mesh_mode": "raw",
+      "shuffled": false,
+      "epochs_from": "mesh_raw"
+    },
+    "mesh_shuffled": {
+      "arch": "mesh",
+      "flip": "perm",
+      "mesh_mode": "raw",
+      "shuffled": true,
+      "epochs_from": "mesh_raw"
+    },
+    "mesh_neutral": {
+      "arch": "mesh",
+      "flip": "perm",
+      "mesh_mode": "neutral",
+      "shuffled": false,
+      "epochs_from": null
+    },
+    "mesh_neutral_ref": {
+      "arch": "mesh",
+      "flip": "perm",
+      "mesh_mode": "neutral_ref",
+      "shuffled": false,
+      "epochs_from": "mesh_neutral"
+    },
+    "scalars": {
+      "arch": "scalars",
+      "flip": "perm",
+      "mesh_mode": "raw",
+      "shuffled": false,
+      "epochs_from": null
+    },
+    "fused_perm": {
+      "arch": "fused",
+      "flip": "perm",
+      "mesh_mode": "raw",
+      "shuffled": false,
+      "epochs_from": null
+    },
+    "fused_naiveflip": {
+      "arch": "fused",
+      "flip": "naive",
+      "mesh_mode": "raw",
+      "shuffled": false,
+      "epochs_from": "fused_perm"
+    },
+    "fused_noflip": {
+      "arch": "fused",
+      "flip": "none",
+      "mesh_mode": "raw",
+      "shuffled": false,
+      "epochs_from": "fused_perm"
+    },
+    "fused_shuffled": {
+      "arch": "fused",
+      "flip": "perm",
+      "mesh_mode": "raw",
+      "shuffled": true,
+      "epochs_from": "fused_perm"
+    },
+    "fused_neutral": {
+      "arch": "fused",
+      "flip": "perm",
+      "mesh_mode": "neutral",
+      "shuffled": false,
+      "epochs_from": null
+    },
+    "fused_neutral_ref": {
+      "arch": "fused",
+      "flip": "perm",
+      "mesh_mode": "neutral_ref",
+      "shuffled": false,
+      "epochs_from": "fused_neutral"
+    }
+  },
+  "split_manifest_sha256": "3ca52e5d3634feaa809e677f518c0e18433cb548e342f29598bf6b06cf0bb6eb",
+  "smoke": false
 }

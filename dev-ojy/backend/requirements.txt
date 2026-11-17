@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+motor
+PyJWT
+pwdlib[argon2]
+email-validator
+python-dotenv
+httpx
+sse-starlette
+osmnx
+networkx
+scikit-learn

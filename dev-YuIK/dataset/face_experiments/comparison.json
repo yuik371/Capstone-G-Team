@@ -1,0 +1,71 @@
+{
+  "protocol": {
+    "same_seed": 42,
+    "same_identity_split": {
+      "train": [
+        "F1352",
+        "F1353",
+        "F1355",
+        "F1356",
+        "F1357",
+        "F1358"
+      ],
+      "valid": [
+        "F1354",
+        "F1359"
+      ],
+      "test": [
+        "F1350",
+        "F1351"
+      ]
+    },
+    "schedule_hours": 8.0,
+    "hours_per_model_allocation": 4.0,
+    "test_used_only_after_checkpoint_selection": true
+  },
+  "models": {
+    "vision": {
+      "macro_f1": 0.12054944783449173,
+      "balanced_accuracy": 0.1666666716337204,
+      "macro_auroc": 0.4794973544973545,
+      "parameters": {
+        "total": 4337283,
+        "trainable": 4337283
+      },
+      "latency": {
+        "device": "cuda",
+        "batch_size": 16,
+        "warmup_runs": 3,
+        "timed_runs": 20,
+        "p50_ms_per_sample": 0.769293750011002,
+        "p95_ms_per_sample": 0.8650750000356311
+      },
+      "runtime_seconds": 247.07829332351685,
+      "qualitative_grid": "C:\\Users\\USER.DESKTOP-IF1RABT\\Desktop\\knut-workspace\\Capstone-G-Team\\dev-YuIK\\dataset\\face_experiments\\qualitative_grid_vision_6x6.png"
+    },
+    "joint": {
+      "macro_f1": 0.2020796239376068,
+      "balanced_accuracy": 0.2380952388048172,
+      "macro_auroc": 0.6997354497354497,
+      "parameters": {
+        "total": 4928795,
+        "trainable": 4928795
+      },
+      "latency": {
+        "device": "cuda",
+        "batch_size": 16,
+        "warmup_runs": 3,
+        "timed_runs": 20,
+        "p50_ms_per_sample": 0.8166750000100365,
+        "p95_ms_per_sample": 1.1858999999958542
+      },
+      "runtime_seconds": 246.03033447265625,
+      "qualitative_grid": "C:\\Users\\USER.DESKTOP-IF1RABT\\Desktop\\knut-workspace\\Capstone-G-Team\\dev-YuIK\\dataset\\face_experiments\\qualitative_grid_joint_6x6.png"
+    }
+  },
+  "joint_minus_vision": {
+    "macro_f1": 0.08153017610311508,
+    "balanced_accuracy": 0.0714285671710968,
+    "macro_auroc": 0.22023809523809518
+  }
+}

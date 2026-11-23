@@ -6,6 +6,3 @@ torchvision
 timm
 numpy
 Pillow
-# Optional but useful for extended statistical analysis outside the built-in
-# metrics implementation.
-scikit-learn

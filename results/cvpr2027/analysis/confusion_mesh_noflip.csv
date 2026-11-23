@@ -1,0 +1,8 @@
+true,Anger,Disgust,Fear,Joy,Neutral,Sadness,Surprise
+Anger,85,0,0,0,0,65,0
+Disgust,0,90,35,15,0,10,0
+Fear,0,25,107,0,0,4,14
+Joy,0,0,0,138,0,0,12
+Neutral,9,0,0,0,127,10,4
+Sadness,55,0,0,0,5,90,0
+Surprise,0,0,0,0,0,0,150

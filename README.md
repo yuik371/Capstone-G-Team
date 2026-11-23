@@ -19,6 +19,8 @@
 ## 3. 프로젝트 아키텍처 및 워크플로우
 ## 4. 디렉터리 구조
 ## 5. 설치 및 준비
+### 안면 표정 검증 실험 데이터 (AI-Hub 안면 인식 랜드마크 Sample)
+얼굴 이미지·JSON·OBJ 원본은 저장소에 포함하지 않습니다(`.gitignore` 처리). AI-Hub에서 직접 내려받아 `--data-root`로 경로를 지정하세요. 폴더 구조와 실행 방법은 [`other-dev/dev-shs/README.md`](other-dev/dev-shs/README.md)를 참고하세요.
 ## 6. 사용 방법
 ## 7. 스크립트 상세 설명
 ## 8. 라이선스

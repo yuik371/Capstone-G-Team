@@ -12,15 +12,6 @@
     "F1358",
     "F1359"
   ],
-  "class_counts": {
-    "Anger": 30,
-    "Disgust": 30,
-    "Fear": 30,
-    "Joy": 30,
-    "Neutral": 30,
-    "Sadness": 30,
-    "Surprise": 30
-  },
   "classes": [
     "Anger",
     "Disgust",
@@ -30,10 +21,24 @@
     "Sadness",
     "Surprise"
   ],
+  "class_counts": {
+    "Anger": 30,
+    "Disgust": 30,
+    "Fear": 30,
+    "Joy": 30,
+    "Neutral": 30,
+    "Sadness": 30,
+    "Surprise": 30
+  },
+  "lights": [
+    "highlight",
+    "lowlight",
+    "middlelight"
+  ],
+  "capture_triplets": 70,
   "vertices_per_mesh": 1220,
   "triangles_per_mesh": 2304,
   "topology_sha256": "40110012311c7b504a24d796fc90bf47fbd93d52b616f0b097d51736481d8a1e",
-  "image_root": "C:\\Users\\geome\\OneDrive\\바탕 화면\\Capstone-G-Team\\dev-YuIK\\안면_인식_랜드마크_Sample\\01.원천데이터\\image",
-  "annotation_root": "C:\\Users\\geome\\OneDrive\\바탕 화면\\Capstone-G-Team\\dev-YuIK\\안면_인식_랜드마크_Sample\\02.라벨링데이터",
+  "data_root": "dev-YuIK/안면_인식_랜드마크_Sample",
   "label_key": "expression"
 }

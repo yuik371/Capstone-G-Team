@@ -1,0 +1,23 @@
+# --- AI-Hub face landmark sample: licensed data with real faces, never commit ---
+dev-YuIK/안면_인식_랜드마크_Sample/
+data/aihub_face_landmark/
+# figures that embed face crops
+results/**/qualitative_*.png
+
+# --- model weights / checkpoints ---
+*.pt
+*.pth
+*.ckpt
+results/**/checkpoints/
+
+# --- IDE / editor ---
+.idea/
+*.iml
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+
+# --- superseded partial sweep output (old 5-fold repeats) ---
+results/repeats/

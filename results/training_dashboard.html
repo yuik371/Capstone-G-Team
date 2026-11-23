@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Progress Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { darkBg: '#0f172a', cardBg: '#1e293b' } } }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-darkBg text-slate-100 min-h-screen flex flex-col">
+
+    <header class="border-b border-slate-800 bg-cardBg/50 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-wrap gap-3 justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="h-3 w-3 bg-blue-500 rounded-full animate-pulse"></div>
+                <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                    Model Training Dashboard
+                </h1>
+            </div>
+            <div class="flex flex-wrap gap-2 items-center">
+                <select id="runSelect" onchange="onRunChange()" class="text-xs bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-slate-200 focus:outline-none focus:border-blue-500"></select>
+                <label class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-1.5 rounded-lg border border-slate-700 transition cursor-pointer">
+                    .jsonl 파일 열기
+                    <input type="file" accept=".jsonl,.json,.txt,.log" class="hidden" onchange="loadFile(event)">
+                </label>
+                <button onclick="loadDefaultLog()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-1.5 rounded-lg border border-slate-700 transition">
+                    cvpr2027 로그 불러오기
+                </button>
+                <button onclick="loadSampleData()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-1.5 rounded-lg border border-slate-700 transition">
+                    샘플 데이터
+                </button>
+                <button onclick="clearAllData()" class="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-medium px-3 py-1.5 rounded-lg border border-rose-500/30 transition">
+                    초기화
+                </button>
+            </div>
+        </div>
+        <p id="statusMsg" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-2 text-xs text-slate-400"></p>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+
+        <!-- Data Input Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-cardBg rounded-xl p-5 border border-slate-800 shadow-lg lg:col-span-1 space-y-4">
+                <h2 class="text-base font-semibold text-slate-200 border-b border-slate-800 pb-2">단일 에포크 입력</h2>
+                <form id="singleEpochForm" onsubmit="addSingleEpoch(event)" class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Run 이름</label>
+                        <input type="text" id="inputRun" placeholder="manual" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Epoch 번호</label>
+                        <input type="number" id="inputEpoch" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Train Loss</label>
+                        <input type="number" step="any" id="inputLoss" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Val Macro F1</label>
+                        <input type="number" step="any" id="inputF1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Val Balanced Accuracy</label>
+                        <input type="number" step="any" id="inputAcc" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Val AUROC</label>
+                        <input type="number" step="any" id="inputAuroc" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm py-2 rounded-lg transition shadow">
+                        데이터 추가
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-cardBg rounded-xl p-5 border border-slate-800 shadow-lg lg:col-span-2 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-base font-semibold text-slate-200 border-b border-slate-800 pb-2 mb-3">JSON 로그 붙여넣기 (대량 입력)</h2>
+                    <p class="text-xs text-slate-400 mb-2">JSON Lines 형태의 로그(training_log.jsonl)를 그대로 붙여넣으세요. <code>"run"</code> 필드가 있으면 run별로 구분됩니다.</p>
+                    <textarea id="jsonInput" rows="9" placeholder='{"run": "vision_fold_1", "epoch": 1, "train_loss": 1.97, "val_macro_f1": 0.14, "val_balanced_accuracy": 0.24, "val_auroc_ovr_macro": 0.72}&#10;{"run": "vision_fold_1", "epoch": 2, "train_loss": 1.86, "val_macro_f1": 0.57, "val_balanced_accuracy": 0.60, "val_auroc_ovr_macro": 0.86}' class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-xs font-mono text-slate-300 focus:outline-none focus:border-blue-500"></textarea>
+                </div>
+                <div class="mt-3 text-right">
+                    <button onclick="parseJsonInput()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm px-4 py-2 rounded-lg transition shadow">
+                        JSON 데이터 적용하기
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric Summary Cards -->
+        <div>
+            <p id="summaryLabel" class="text-xs text-slate-400 mb-2"></p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-cardBg rounded-xl p-5 border border-slate-800 shadow-lg">
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Latest Train Loss</p>
+                    <span id="metricLoss" class="text-3xl font-bold text-orange-400 mt-2 block">-</span>
+                </div>
+                <div class="bg-cardBg rounded-xl p-5 border border-slate-800 shadow-lg">
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Latest Val Macro F1</p>
+                    <span id="metricF1" class="text-3xl font-bold text-blue-400 mt-2 block">-</span>
+                    <span id="bestF1" class="text-xs text-slate-400 mt-1 block"></span>
+                </div>
+                <div class="bg-cardBg rounded-xl p-5 border border-slate-800 shadow-lg">
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Latest Val Bal. Accuracy</p>
+                    <span id="metricAcc" class="text-3xl font-bold text-purple-400 mt-2 block">-</span>
+                </div>
+                <div class="bg-cardBg rounded-xl p-5 border border-slate-800 shadow-lg">
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Latest Val AUROC</p>
+                    <span id="metricAuroc" class="text-3xl font-bold text-emerald-400 mt-2 block">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-cardBg rounded-xl p-5 border border-slate-800 shadow-lg">
+                <h2 class="text-sm font-semibold text-slate-200 mb-3">Train Loss</h2>
+                <div class="relative h-64 w-full"><canvas id="lossChart"></canvas></div>
+            </div>
+            <div class="bg-cardBg rounded-xl p-5 border border-slate-800 shadow-lg">
+                <h2 class="text-sm font-semibold text-slate-200 mb-3">Val Macro F1</h2>
+                <div class="relative h-64 w-full"><canvas id="f1Chart"></canvas></div>
+            </div>
+            <div class="bg-cardBg rounded-xl p-5 border border-slate-800 shadow-lg">
+                <h2 class="text-sm font-semibold text-slate-200 mb-3">Val Balanced Accuracy</h2>
+                <div class="relative h-64 w-full"><canvas id="accChart"></canvas></div>
+            </div>
+            <div class="bg-cardBg rounded-xl p-5 border border-slate-800 shadow-lg">
+                <h2 class="text-sm font-semibold text-slate-200 mb-3">Val AUROC</h2>
+                <div class="relative h-64 w-full"><canvas id="aurocChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Run Summary Table -->
+        <div class="bg-cardBg rounded-xl p-5 border border-slate-800 shadow-lg">
+            <h2 class="text-base font-semibold text-slate-200 mb-3">Run별 요약 (Best Val Macro F1 기준)</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-900/60 uppercase text-slate-400 font-medium border-b border-slate-800">
+                        <tr>
+                            <th class="py-2.5 px-3">Run</th>
+                            <th class="py-2.5 px-3">Epochs</th>
+                            <th class="py-2.5 px-3">Best Epoch</th>
+                            <th class="py-2.5 px-3">Best Val F1</th>
+                            <th class="py-2.5 px-3">Val Bal. Acc @Best</th>
+                            <th class="py-2.5 px-3">Val AUROC @Best</th>
+                            <th class="py-2.5 px-3">학습 시간</th>
+                        </tr>
+                    </thead>
+                    <tbody id="runTableBody" class="divide-y divide-slate-800/50"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="bg-cardBg rounded-xl p-5 border border-slate-800 shadow-lg">
+            <h2 class="text-base font-semibold text-slate-200 mb-3">입력된 에포크 데이터 목록 <span id="tableRunLabel" class="text-xs text-slate-400 font-normal"></span></h2>
+            <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-900 uppercase text-slate-400 font-medium border-b border-slate-800 sticky top-0">
+                        <tr>
+                            <th class="py-2.5 px-3">Run</th>
+                            <th class="py-2.5 px-3">Epoch</th>
+                            <th class="py-2.5 px-3">Train Loss</th>
+                            <th class="py-2.5 px-3">Val Macro F1</th>
+                            <th class="py-2.5 px-3">Val Bal. Acc</th>
+                            <th class="py-2.5 px-3">Val AUROC</th>
+                            <th class="py-2.5 px-3 text-right">삭제</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody" class="divide-y divide-slate-800/50"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const DEFAULT_LOG = 'cvpr2027/training_log.jsonl';
+        const ALL = '__all__';
+        const PALETTE = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#ef4444',
+                         '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#a3a3a3'];
+        const METRICS = [
+            { key: 'train_loss', chart: 'loss', canvas: 'lossChart', color: 'rgba(245, 158, 11, 1)' },
+            { key: 'val_macro_f1', chart: 'f1', canvas: 'f1Chart', color: 'rgba(59, 130, 246, 1)' },
+            { key: 'val_balanced_accuracy', chart: 'acc', canvas: 'accChart', color: 'rgba(139, 92, 246, 1)' },
+            { key: 'val_auroc_ovr_macro', chart: 'auroc', canvas: 'aurocChart', color: 'rgba(16, 185, 129, 1)' },
+        ];
+
+        let trainingData = [];   // [{run, epoch, train_loss, ...}]
+        let selectedRun = ALL;
+        let charts = {};
+
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = '#334155';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        function createChart(ctxId) {
+            return new Chart(document.getElementById(ctxId).getContext('2d'), {
+                type: 'line',
+                data: { datasets: [] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    parsing: false,
+                    interaction: { mode: 'nearest', axis: 'x', intersect: false },
+                    plugins: {
+                        legend: { display: false, labels: { boxWidth: 10, font: { size: 10 } } },
+                        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y.toFixed(4)}` } }
+                    },
+                    scales: {
+                        x: { type: 'linear', title: { display: true, text: 'Epoch' }, grid: { color: '#1e293b' } },
+                        y: { grid: { color: '#334155' } }
+                    }
+                }
+            });
+        }
+
+        window.onload = function () {
+            METRICS.forEach(m => charts[m.chart] = createChart(m.canvas));
+            updateUI();
+            loadDefaultLog(true);
+        };
+
+        const fmt = v => (typeof v === 'number' && !isNaN(v)) ? v.toFixed(4) : '-';
+        const num = v => { const x = parseFloat(v); return isNaN(x) ? undefined : x; };
+        const runsList = () => [...new Set(trainingData.map(d => d.run))];
+        const rowsOf = run => trainingData.filter(d => d.run === run).sort((a, b) => a.epoch - b.epoch);
+        const setStatus = msg => document.getElementById('statusMsg').innerText = msg;
+
+        function updateRunSelect() {
+            const sel = document.getElementById('runSelect');
+            const runs = runsList();
+            if (selectedRun !== ALL && !runs.includes(selectedRun)) selectedRun = ALL;
+            sel.innerHTML = `<option value="${ALL}">전체 run 비교 (${runs.length})</option>` +
+                runs.map(r => `<option value="${r}">${r}</option>`).join('');
+            sel.value = selectedRun;
+        }
+
+        function onRunChange() {
+            selectedRun = document.getElementById('runSelect').value;
+            updateUI();
+        }
+
+        function updateUI() {
+            updateRunSelect();
+            const runs = runsList();
+            const shownRuns = selectedRun === ALL ? runs : [selectedRun];
+            const multi = shownRuns.length > 1;
+
+            // Charts
+            METRICS.forEach(m => {
+                const chart = charts[m.chart];
+                chart.data.datasets = shownRuns.map((run, i) => {
+                    const color = multi ? PALETTE[runs.indexOf(run) % PALETTE.length] : m.color;
+                    return {
+                        label: run,
+                        data: rowsOf(run).filter(d => typeof d[m.key] === 'number').map(d => ({ x: d.epoch, y: d[m.key] })),
+                        borderColor: color,
+                        backgroundColor: multi ? color : color.replace('1)', '0.1)'),
+                        borderWidth: multi ? 1.5 : 2,
+                        fill: !multi,
+                        tension: 0.2,
+                        pointRadius: multi ? 0 : 2
+                    };
+                });
+                chart.options.plugins.legend.display = multi;
+                chart.update();
+            });
+
+            // Summary cards (selected run, or last run in "all" mode)
+            const cardRun = selectedRun === ALL ? runs[runs.length - 1] : selectedRun;
+            const rows = cardRun !== undefined ? rowsOf(cardRun) : [];
+            const latest = rows[rows.length - 1];
+            document.getElementById('summaryLabel').innerText = cardRun !== undefined ? `요약 카드 기준 run: ${cardRun}` : '';
+            document.getElementById('metricLoss').innerText = latest ? fmt(latest.train_loss) : '-';
+            document.getElementById('metricF1').innerText = latest ? fmt(latest.val_macro_f1) : '-';
+            document.getElementById('metricAcc').innerText = latest ? fmt(latest.val_balanced_accuracy) : '-';
+            document.getElementById('metricAuroc').innerText = latest ? fmt(latest.val_auroc_ovr_macro) : '-';
+            const best = bestOf(rows);
+            document.getElementById('bestF1').innerText = best ? `best ${fmt(best.val_macro_f1)} @ epoch ${best.epoch}` : '';
+
+            renderRunTable(runs);
+            renderDataTable(shownRuns);
+
+            // Next default epoch for manual input
+            const manualRun = document.getElementById('inputRun').value.trim() || (selectedRun !== ALL ? selectedRun : 'manual');
+            const mr = rowsOf(manualRun);
+            document.getElementById('inputEpoch').value = mr.length ? mr[mr.length - 1].epoch + 1 : 1;
+        }
+
+        function bestOf(rows) {
+            return rows.filter(d => typeof d.val_macro_f1 === 'number')
+                       .reduce((b, d) => (!b || d.val_macro_f1 > b.val_macro_f1) ? d : b, null);
+        }
+
+        function renderRunTable(runs) {
+            const tbody = document.getElementById('runTableBody');
+            if (!runs.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-slate-500">등록된 데이터가 없습니다.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = runs.map(run => {
+                const rows = rowsOf(run);
+                const b = bestOf(rows);
+                const last = rows[rows.length - 1];
+                const secs = last && typeof last.run_elapsed_seconds === 'number' ? `${(last.run_elapsed_seconds / 60).toFixed(1)} min` : '-';
+                const active = run === selectedRun ? 'bg-slate-800/60' : '';
+                return `<tr class="hover:bg-slate-800/40 cursor-pointer ${active}" onclick="selectRun('${run}')">
+                    <td class="py-2 px-3 font-semibold text-slate-200">${run}</td>
+                    <td class="py-2 px-3">${rows.length}</td>
+                    <td class="py-2 px-3">${b ? b.epoch : '-'}</td>
+                    <td class="py-2 px-3 text-blue-400">${b ? fmt(b.val_macro_f1) : '-'}</td>
+                    <td class="py-2 px-3 text-purple-400">${b ? fmt(b.val_balanced_accuracy) : '-'}</td>
+                    <td class="py-2 px-3 text-emerald-400">${b ? fmt(b.val_auroc_ovr_macro) : '-'}</td>
+                    <td class="py-2 px-3 text-slate-400">${secs}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderDataTable(shownRuns) {
+            const tbody = document.getElementById('dataTableBody');
+            const rows = shownRuns.flatMap(rowsOf);
+            document.getElementById('tableRunLabel').innerText = rows.length ? `(${rows.length}행)` : '';
+            if (!rows.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-slate-500">등록된 데이터가 없습니다.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = rows.map(d => `
+                <tr class="hover:bg-slate-800/40">
+                    <td class="py-2 px-3 text-slate-400">${d.run}</td>
+                    <td class="py-2 px-3 font-semibold text-slate-200">${d.epoch}</td>
+                    <td class="py-2 px-3 text-orange-400">${fmt(d.train_loss)}</td>
+                    <td class="py-2 px-3 text-blue-400">${fmt(d.val_macro_f1)}</td>
+                    <td class="py-2 px-3 text-purple-400">${fmt(d.val_balanced_accuracy)}</td>
+                    <td class="py-2 px-3 text-emerald-400">${fmt(d.val_auroc_ovr_macro)}</td>
+                    <td class="py-2 px-3 text-right">
+                        <button onclick="removeEpoch('${d.run}', ${d.epoch})" class="text-rose-400 hover:text-rose-300 font-medium">삭제</button>
+                    </td>
+                </tr>`).join('');
+        }
+
+        function selectRun(run) {
+            selectedRun = run;
+            updateUI();
+        }
+
+        // Insert or replace by (run, epoch)
+        function upsert(obj) {
+            const idx = trainingData.findIndex(d => d.run === obj.run && d.epoch === obj.epoch);
+            if (idx >= 0) trainingData[idx] = obj; else trainingData.push(obj);
+        }
+
+        function ingestText(text) {
+            let count = 0;
+            text.split(/\r?\n/).forEach(line => {
+                line = line.trim();
+                if (!line) return;
+                try {
+                    const obj = JSON.parse(line);
+                    if (obj.epoch === undefined) return;
+                    obj.run = obj.run !== undefined ? String(obj.run) : 'default';
+                    obj.epoch = Number(obj.epoch);
+                    upsert(obj);
+                    count++;
+                } catch (err) {
+                    console.error('Line parsing error:', line, err);
+                }
+            });
+            return count;
+        }
+
+        function addSingleEpoch(e) {
+            e.preventDefault();
+            const run = document.getElementById('inputRun').value.trim() || (selectedRun !== ALL ? selectedRun : 'manual');
+            upsert({
+                run,
+                epoch: parseInt(document.getElementById('inputEpoch').value),
+                train_loss: num(document.getElementById('inputLoss').value),
+                val_macro_f1: num(document.getElementById('inputF1').value),
+                val_balanced_accuracy: num(document.getElementById('inputAcc').value),
+                val_auroc_ovr_macro: num(document.getElementById('inputAuroc').value)
+            });
+            ['inputLoss', 'inputF1', 'inputAcc', 'inputAuroc'].forEach(id => document.getElementById(id).value = '');
+            updateUI();
+        }
+
+        function parseJsonInput() {
+            const text = document.getElementById('jsonInput').value.trim();
+            if (!text) return;
+            const n = ingestText(text);
+            if (n > 0) {
+                document.getElementById('jsonInput').value = '';
+                setStatus(`${n}개 에포크 데이터를 적용했습니다.`);
+                updateUI();
+            } else {
+                alert('올바른 JSON 형식을 찾을 수 없습니다. 라인별 JSON 데이터를 확인해 주세요.');
+            }
+        }
+
+        function loadFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                const n = ingestText(reader.result);
+                setStatus(`${file.name}: ${n}개 에포크 데이터를 불러왔습니다.`);
+                updateUI();
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        async function loadDefaultLog(silent) {
+            try {
+                const res = await fetch(DEFAULT_LOG, { cache: 'no-store' });
+                if (!res.ok) throw new Error(res.status);
+                const n = ingestText(await res.text());
+                setStatus(`${DEFAULT_LOG}: ${n}개 에포크 데이터를 불러왔습니다.`);
+                updateUI();
+            } catch (err) {
+                const msg = `${DEFAULT_LOG}을(를) 자동으로 불러오지 못했습니다. 파일로 직접 열었다면 브라우저 보안 정책 때문입니다. ` +
+                            `'.jsonl 파일 열기' 버튼을 쓰거나 results 폴더에서 'python -m http.server'로 실행하세요.`;
+                setStatus(msg);
+                if (!silent) alert(msg);
+            }
+        }
+
+        function removeEpoch(run, epoch) {
+            trainingData = trainingData.filter(d => !(d.run === run && d.epoch === epoch));
+            updateUI();
+        }
+
+        function clearAllData() {
+            trainingData = [];
+            selectedRun = ALL;
+            setStatus('');
+            updateUI();
+        }
+
+        function loadSampleData() {
+            trainingData = [
+                { run: 'sample', epoch: 1, train_loss: 1.9544, val_macro_f1: 0.1015, val_balanced_accuracy: 0.1904, val_auroc_ovr_macro: 0.7638 },
+                { run: 'sample', epoch: 2, train_loss: 1.8247, val_macro_f1: 0.4334, val_balanced_accuracy: 0.4761, val_auroc_ovr_macro: 0.8928 },
+                { run: 'sample', epoch: 3, train_loss: 1.5755, val_macro_f1: 0.4547, val_balanced_accuracy: 0.5476, val_auroc_ovr_macro: 0.9206 },
+                { run: 'sample', epoch: 4, train_loss: 1.1768, val_macro_f1: 0.4793, val_balanced_accuracy: 0.5476, val_auroc_ovr_macro: 0.9404 },
+                { run: 'sample', epoch: 5, train_loss: 0.8607, val_macro_f1: 0.4727, val_balanced_accuracy: 0.5238, val_auroc_ovr_macro: 0.9312 }
+            ];
+            selectedRun = 'sample';
+            setStatus('샘플 데이터를 불러왔습니다.');
+            updateUI();
+        }
+    </script>
+</body>
+</html>

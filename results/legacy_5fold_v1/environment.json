@@ -1,0 +1,17 @@
+{
+  "python": "3.14.7",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "torch": "2.15.0+cu132",
+  "torchvision": "0.29.2+cu132",
+  "numpy": "2.5.4",
+  "scipy": "1.18.1",
+  "scikit_learn": "1.9.1",
+  "matplotlib": "3.11.2",
+  "pillow": "13.0.0",
+  "device": "cuda",
+  "cuda_name": "NVIDIA GeForce RTX 3060",
+  "seed": 2027,
+  "weights": "imagenet",
+  "budget_hours": 4.0,
+  "eval_reserve_fraction": 0.15
+}

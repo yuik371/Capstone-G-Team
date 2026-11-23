@@ -1,19 +1,1 @@
-# --- AI-Hub face landmark sample: licensed data with real faces, never commit ---
 
-# --- model weights / checkpoints ---
-*.pt
-*.pth
-*.ckpt
-results/**/checkpoints/
-
-# --- IDE / editor ---
-.idea/
-*.iml
-
-# --- Python ---
-__pycache__/
-*.py[cod]
-.venv/
-
-# --- superseded partial sweep output (old 5-fold repeats) ---
-results/repeats/

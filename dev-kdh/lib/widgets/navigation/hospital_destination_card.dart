@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../config/app_theme.dart';
+import '../../providers/ems_provider.dart';
 
 class HospitalDestinationCard extends StatelessWidget {
   const HospitalDestinationCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final ems = context.watch<EmsProvider>();
+    final hospital = ems.selectedHospital;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -40,9 +45,9 @@ class HospitalDestinationCard extends StatelessWidget {
                   spacing: 6,
                   runSpacing: 4,
                   children: [
-                    const Text(
-                      '서울대학교병원 권역외상센터',
-                      style: TextStyle(
+                    Text(
+                      hospital.name,
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
                         color: Color(0xFF111827),
@@ -68,9 +73,9 @@ class HospitalDestinationCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 3),
-                const Text(
-                  '담당의: 이재혁 교수 외상의과팀 대기 중 · 직통 핫라인 개통',
-                  style: TextStyle(
+                Text(
+                  '응급의료센터 대기 중 · 직통 핫라인 (${hospital.phone})',
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF6B7280),
@@ -95,9 +100,9 @@ class HospitalDestinationCard extends StatelessWidget {
             ),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('서울대병원 권역외상팀 PTT 음성 통화 연결됨'),
-                  backgroundColor: Color(0xFF8B1515),
+                SnackBar(
+                  content: Text('${hospital.name} 응급의료팀 PTT 음성 통화 연결됨'),
+                  backgroundColor: const Color(0xFF8B1515),
                 ),
               );
             },

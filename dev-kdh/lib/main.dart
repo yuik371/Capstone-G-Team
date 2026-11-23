@@ -3,8 +3,9 @@ import 'package:provider/provider.dart';
 import 'config/app_theme.dart';
 import 'providers/ems_provider.dart';
 import 'screens/ems_shell_screen.dart';
+import 'screens/login_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(
     MultiProvider(
@@ -21,11 +22,13 @@ class ErLinkEmsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ems = context.watch<EmsProvider>();
+
     return MaterialApp(
       title: 'ER-Link 119 TACTICAL EMS',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
-      home: const EmsShellScreen(),
+      home: ems.isAuthenticated ? const EmsShellScreen() : const LoginScreen(),
     );
   }
 }

@@ -11,7 +11,7 @@ class NavigationBottomBar extends StatelessWidget {
 
     return Row(
       children: [
-        // 1. Direct Medical Consultation Order Button
+        // 1. 지도의사 처방 버튼
         Container(
           height: 48,
           padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -52,7 +52,7 @@ class NavigationBottomBar extends StatelessWidget {
         ),
         const SizedBox(width: 8),
 
-        // 2. Transfer Protocol Critical Handover Button
+        // 2. [병원 도착 및 환자 인계서 전송 -> 출동 임무 종료]
         Expanded(
           child: InkWell(
             onTap: () => _showHandoverDialog(context, ems),
@@ -81,7 +81,7 @@ class NavigationBottomBar extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'TRANSFER PROTOCOL',
+                          'ARRIVAL & PROTOCOL HANDOVER',
                           style: TextStyle(
                             fontSize: 8,
                             fontWeight: FontWeight.w800,
@@ -92,7 +92,7 @@ class NavigationBottomBar extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          '병원 도착 및 환자 인계서 전송 →',
+                          '병원 도착 및 환자 인계서 전송 (출동 임무 종료) →',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w900,
@@ -115,6 +115,8 @@ class NavigationBottomBar extends StatelessWidget {
   }
 
   void _showHandoverDialog(BuildContext context, EmsProvider ems) {
+    final hospName = ems.selectedHospital.name;
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -125,7 +127,7 @@ class NavigationBottomBar extends StatelessWidget {
             Icon(Icons.check_circle, color: Color(0xFF059669), size: 28),
             SizedBox(width: 10),
             Text(
-              '환자 인계 및 도착 확정',
+              '환자 인계 및 출동 임무 종료',
               style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
             ),
           ],
@@ -135,7 +137,7 @@ class NavigationBottomBar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${ems.patient.name} (${ems.patient.gender}, ${ems.patient.age}세) 환자를 서울대학교병원 권역외상센터 외상의과팀에 최종 인계하시겠습니까?',
+              '${ems.patient.name} (${ems.patient.gender}, ${ems.patient.age}세) 환자를 $hospName 응급의료팀에 최종 인계하고 출동 임무를 종료하시겠습니까?',
               style: const TextStyle(fontSize: 14, height: 1.5),
             ),
             const SizedBox(height: 12),
@@ -146,14 +148,14 @@ class NavigationBottomBar extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('• 활력징후 및 심전도 데이터 자동 ePCR 기록 완료', style: TextStyle(fontSize: 12)),
-                  SizedBox(height: 4),
-                  Text('• 12유도 ECG 및 외상 사진 서울대 EMR 연동 완료', style: TextStyle(fontSize: 12)),
-                  SizedBox(height: 4),
-                  Text('• 구급대 출동 종료 및 복귀 대기 전환', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF059669))),
+                  const Text('• 활력징후 및 심전도 데이터 자동 ePCR 기록 완료', style: TextStyle(fontSize: 12)),
+                  const SizedBox(height: 4),
+                  Text('• 12유도 ECG 및 외상 사진 $hospName EMR 연동 완료', style: const TextStyle(fontSize: 12)),
+                  const SizedBox(height: 4),
+                  const Text('• 구급대 출동 종료 및 새 환자 대기 상태로 초기화', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF059669))),
                 ],
               ),
             ),
@@ -172,16 +174,17 @@ class NavigationBottomBar extends StatelessWidget {
             ),
             onPressed: () {
               Navigator.pop(ctx);
-              // [API 연동 포인트: POST /patient/handover]
-              ems.completeHandover();
+              // [출동 임무 종료]: 인계 완료 후 상태 초기화 및 첫 화면 복귀
+              ems.endMission();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('환자 인계서 전송 완료: 종로 704호 구급대 출동 임무 종료'),
-                  backgroundColor: Color(0xFF059669),
+                SnackBar(
+                  content: Text('$hospName 환자 인계 완료: 출동 임무가 공식 종료되었습니다.'),
+                  backgroundColor: const Color(0xFF059669),
+                  duration: const Duration(seconds: 3),
                 ),
               );
             },
-            child: const Text('인계 완료 및 전송', style: TextStyle(fontWeight: FontWeight.w800)),
+            child: const Text('인계 완료 및 출동 종료', style: TextStyle(fontWeight: FontWeight.w800)),
           ),
         ],
       ),

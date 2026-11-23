@@ -161,6 +161,31 @@ python -m emergency_cdss.scripts.train_wound --no-pretrained --epochs 1 --num-wo
    현재 `LandmarkDataset`은 고정 길이 `[N, F]` 입력용이며, 시계열 모델은
    별도의 padding/mask 정책을 추가해야 한다.
 
+## 안면 랜드마크 융합 실험
+
+`FACE_LANDMARK_MULTIMODAL_CVPR_METHOD.md` describes the EfficientNet-B0 and
+3D-mesh fusion method, identity-disjoint evaluation protocol, geometric
+descriptors, and the limits of the supplied expression dataset. The executable
+five-fold pipeline is `emergency_cdss/scripts/validate_face_multimodal.py`.
+
+Run it from `dev-YuIK` after installing the tested CUDA environment:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r emergency_cdss/requirements-face-validation.txt
+python -m emergency_cdss.scripts.validate_face_multimodal `
+  --epochs 100 --batch-size 16 --time-budget-hours 4
+```
+
+The pilot completed all ten model fits (100 epochs each) in 15.8 minutes on the
+RTX 5070 laptop GPU. Out-of-fold macro F1 was 0.5864 for vision-only and 0.6525
+for image-plus-mesh fusion. The paired identity-bootstrap interval for the F1
+difference includes zero, so this ten-identity sample does not establish a
+reliable classification gain. Results, checkpoints, PR curves, and the 6x6
+qualitative grid are in `outputs/face_multimodal_cvpr_2027/`. These expression
+labels do not support clinical diagnosis claims.
+
 ## 8. 라이선스
 
 본 프로젝트는 MIT 라이선스를 따른다.

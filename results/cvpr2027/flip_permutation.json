@@ -1,0 +1,106 @@
+{
+  "folds": {
+    "01": {
+      "is_involution": true,
+      "fixed_points": 46,
+      "swapped_pairs": 587,
+      "mirror_plane_x": 2.750116878918995e-05,
+      "match_residual_rms": 0.004110529179727581,
+      "template_rms_radius": 0.9927629986136739,
+      "agrees_with_nearest_neighbour": true,
+      "permutation_sha256": "708c1a973636568afce42344977bf6f5a4731546c7ace8a9a63a71bcbf303de2"
+    },
+    "02": {
+      "is_involution": true,
+      "fixed_points": 46,
+      "swapped_pairs": 587,
+      "mirror_plane_x": 7.042346681624268e-05,
+      "match_residual_rms": 0.0034764370964757737,
+      "template_rms_radius": 0.9927515266680452,
+      "agrees_with_nearest_neighbour": true,
+      "permutation_sha256": "708c1a973636568afce42344977bf6f5a4731546c7ace8a9a63a71bcbf303de2"
+    },
+    "03": {
+      "is_involution": true,
+      "fixed_points": 46,
+      "swapped_pairs": 587,
+      "mirror_plane_x": 7.996471928098607e-05,
+      "match_residual_rms": 0.0038750073940274333,
+      "template_rms_radius": 0.9926972784375333,
+      "agrees_with_nearest_neighbour": true,
+      "permutation_sha256": "708c1a973636568afce42344977bf6f5a4731546c7ace8a9a63a71bcbf303de2"
+    },
+    "04": {
+      "is_involution": true,
+      "fixed_points": 46,
+      "swapped_pairs": 587,
+      "mirror_plane_x": 8.891358938344477e-05,
+      "match_residual_rms": 0.003786545174572131,
+      "template_rms_radius": 0.9925077340978136,
+      "agrees_with_nearest_neighbour": true,
+      "permutation_sha256": "708c1a973636568afce42344977bf6f5a4731546c7ace8a9a63a71bcbf303de2"
+    },
+    "05": {
+      "is_involution": true,
+      "fixed_points": 46,
+      "swapped_pairs": 587,
+      "mirror_plane_x": 4.315831494281799e-05,
+      "match_residual_rms": 0.003648590511410209,
+      "template_rms_radius": 0.9929211496473658,
+      "agrees_with_nearest_neighbour": true,
+      "permutation_sha256": "708c1a973636568afce42344977bf6f5a4731546c7ace8a9a63a71bcbf303de2"
+    },
+    "06": {
+      "is_involution": true,
+      "fixed_points": 46,
+      "swapped_pairs": 587,
+      "mirror_plane_x": -7.389725361736956e-06,
+      "match_residual_rms": 0.003893703945630394,
+      "template_rms_radius": 0.9929300411233284,
+      "agrees_with_nearest_neighbour": true,
+      "permutation_sha256": "708c1a973636568afce42344977bf6f5a4731546c7ace8a9a63a71bcbf303de2"
+    },
+    "07": {
+      "is_involution": true,
+      "fixed_points": 46,
+      "swapped_pairs": 587,
+      "mirror_plane_x": 5.1532958315220406e-05,
+      "match_residual_rms": 0.0031412198682559257,
+      "template_rms_radius": 0.9928298475987603,
+      "agrees_with_nearest_neighbour": true,
+      "permutation_sha256": "708c1a973636568afce42344977bf6f5a4731546c7ace8a9a63a71bcbf303de2"
+    },
+    "08": {
+      "is_involution": true,
+      "fixed_points": 46,
+      "swapped_pairs": 587,
+      "mirror_plane_x": -1.6756739219407048e-05,
+      "match_residual_rms": 0.003607710566065166,
+      "template_rms_radius": 0.9928692211308089,
+      "agrees_with_nearest_neighbour": true,
+      "permutation_sha256": "708c1a973636568afce42344977bf6f5a4731546c7ace8a9a63a71bcbf303de2"
+    },
+    "09": {
+      "is_involution": true,
+      "fixed_points": 46,
+      "swapped_pairs": 587,
+      "mirror_plane_x": -7.99762374397859e-06,
+      "match_residual_rms": 0.003749244178565636,
+      "template_rms_radius": 0.9927688652879094,
+      "agrees_with_nearest_neighbour": true,
+      "permutation_sha256": "708c1a973636568afce42344977bf6f5a4731546c7ace8a9a63a71bcbf303de2"
+    },
+    "10": {
+      "is_involution": true,
+      "fixed_points": 46,
+      "swapped_pairs": 587,
+      "mirror_plane_x": -1.336900379899196e-05,
+      "match_residual_rms": 0.0031601112273526503,
+      "template_rms_radius": 0.9926134239602986,
+      "agrees_with_nearest_neighbour": true,
+      "permutation_sha256": "708c1a973636568afce42344977bf6f5a4731546c7ace8a9a63a71bcbf303de2"
+    }
+  },
+  "all_folds_involution": true,
+  "identical_permutation_across_folds": true
+}

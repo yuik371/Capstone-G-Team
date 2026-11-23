@@ -157,17 +157,19 @@ class _EmergencyDispatchBannerState extends State<EmergencyDispatchBanner> {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
-                        '서울대병원 1순위',
-                        style: TextStyle(
+                      Text(
+                        '${ems.selectedHospital.name} (1순위)',
+                        style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'ETA 05:40 / 2.8km',
+                        'ETA ${ems.selectedHospital.eta} / ${ems.selectedHospital.distance}',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../config/app_theme.dart';
+import '../../providers/ems_provider.dart';
+import '../../screens/account_request_screen.dart';
+import '../../screens/login_screen.dart';
 
 class EmsHeader extends StatelessWidget {
   const EmsHeader({super.key});
@@ -207,48 +211,111 @@ class EmsHeader extends StatelessWidget {
         ),
         const SizedBox(width: 14),
 
-        // Officer Profile
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
-          ),
-          child: const Row(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '김민우 반장',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF1F2937),
+        // Officer Profile with Logout Action
+        InkWell(
+          onTap: () => _showLogoutDialog(context),
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: Row(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      context.watch<EmsProvider>().userId,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1F2937),
+                      ),
                     ),
-                  ),
-                  Text(
-                    '1급 응급구조사 (EMT-P)',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF6B7280),
+                    Text(
+                      context.watch<EmsProvider>().userRole == 'ems'
+                          ? '1급 응급구조사 (EMT-P)'
+                          : '계정 역할: ${context.watch<EmsProvider>().userRole.toUpperCase()}',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF6B7280),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              SizedBox(width: 10),
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: Color(0xFFFEE2E2),
-                child: Icon(Icons.person, color: AppTheme.primaryRed, size: 18),
-              ),
-            ],
+                  ],
+                ),
+                const SizedBox(width: 10),
+                const CircleAvatar(
+                  radius: 16,
+                  backgroundColor: Color(0xFFFEE2E2),
+                  child: Icon(Icons.person, color: AppTheme.primaryRed, size: 18),
+                ),
+              ],
+            ),
           ),
         ),
       ],
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    final ems = context.read<EmsProvider>();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.logout, color: AppTheme.primaryRed, size: 22),
+            SizedBox(width: 8),
+            Text(
+              '대원 로그아웃',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+            ),
+          ],
+        ),
+        content: Text(
+          '${ems.userId} 계정에서 로그아웃하시겠습니까?',
+          style: const TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AccountRequestScreen()),
+              );
+            },
+            child: const Text('권한 신청', style: TextStyle(color: AppTheme.primaryRed, fontWeight: FontWeight.bold)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('취소', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryRed,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              ems.logoutUser();
+              Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            },
+            child: const Text('로그아웃', style: TextStyle(fontWeight: FontWeight.w800)),
+          ),
+        ],
+      ),
     );
   }
 

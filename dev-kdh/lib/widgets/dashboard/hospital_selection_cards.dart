@@ -78,9 +78,9 @@ class HospitalSelectionCards extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  '수용 적합도 98%',
-                  style: TextStyle(
+                Text(
+                  '수용 적합도 ${h1.suitabilityScore}%',
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF991B1B),
@@ -159,19 +159,19 @@ class HospitalSelectionCards extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: const Color(0xFFFECACA)),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Text(
-                      '5분 40초',
-                      style: TextStyle(
+                      h1.eta,
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
                         color: Color(0xFF991B1B),
                       ),
                     ),
                     Text(
-                      ' / 2.8km',
-                      style: TextStyle(
+                      ' / ${h1.distance}',
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF991B1B),
@@ -230,13 +230,14 @@ class HospitalSelectionCards extends StatelessWidget {
                   ),
                   onPressed: () => ems.requestHospital(h1),
                   icon: const Icon(Icons.emergency_share_outlined, size: 18),
-                  label: const Text(
-                    '서울대병원 수용 의뢰 및 프리노티 발송',
-                    style: TextStyle(
+                  label: Text(
+                    '${h1.name} 수용 의뢰 및 프리노티 발송',
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.2,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
@@ -299,18 +300,18 @@ class HospitalSelectionCards extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  '수용 양호 (89%)',
-                  style: TextStyle(
+                Text(
+                  '수용 적합 (${h2.suitabilityScore}%)',
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF0284C7),
                   ),
                 ),
                 const SizedBox(width: 14),
-                const Text(
-                  '거리 3.6km / ETA 8분',
-                  style: TextStyle(
+                Text(
+                  '거리 ${h2.distance} / ETA ${h2.eta}',
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF6B7280),
@@ -406,12 +407,13 @@ class HospitalSelectionCards extends StatelessWidget {
             ),
             onPressed: () => ems.requestHospital(h2),
             icon: const Icon(Icons.swap_horiz, size: 18),
-            label: const Text(
-              '2순위 병원으로 변경 및 경로 전환',
-              style: TextStyle(
+            label: Text(
+              '${h2.name}으로 변경 및 경로 전환',
+              style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

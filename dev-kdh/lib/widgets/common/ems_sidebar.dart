@@ -22,23 +22,23 @@ class EmsSidebar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       child: Column(
         children: [
-          // Nav Item 0: 환자 생체 원격 모니터
+          // Nav Item 0: 응급 이송 콜 (환자 정보 입력 및 긴급 콜 발송)
           _buildNavItem(
             context: context,
             index: 0,
-            icon: Icons.monitor_heart_outlined,
-            label: '환자 생체 원격 모니터',
+            icon: Icons.emergency_outlined,
+            label: '응급 이송 콜',
             isSelected: selectedIndex == 0,
             onTap: () => emsProvider.setSidebarIndex(0),
           ),
           const SizedBox(height: 10),
 
-          // Nav Item 1: 응급 GIS 및 병원 수용
+          // Nav Item 1: 응급 GIS 및 환자 모니터 (실시간 생체징후 및 처치 모니터)
           _buildNavItem(
             context: context,
             index: 1,
-            icon: Icons.emergency_outlined,
-            label: '응급 GIS 및 병원 수용',
+            icon: Icons.monitor_heart_outlined,
+            label: '응급 GIS 및 환자 모니터',
             isSelected: selectedIndex == 1,
             onTap: () => emsProvider.setSidebarIndex(1),
           ),

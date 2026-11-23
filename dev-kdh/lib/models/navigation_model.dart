@@ -27,29 +27,47 @@ class NavigationModel {
     required this.routeWaypoints,
   });
 
-  static NavigationModel createInitialMock() {
-    // Route from Cheonggyecheon to Seoul National University Hospital (Daehak-ro)
-    final waypoints = [
-      const LatLng(37.5665, 126.9780), // Cheonggyecheon start
-      const LatLng(37.5680, 126.9830), // Jongno 2-ga
-      const LatLng(37.5704, 126.9920), // Jongno 3-ga
-      const LatLng(37.5735, 126.9980), // Jongno 5-ga
-      const LatLng(37.5765, 126.9995), // Ihwa-dong crossroads
-      const LatLng(37.5796, 127.0000), // SNUH Emergency Center
-    ];
-
+  NavigationModel copyWith({
+    String? nextTurnInstruction,
+    String? greenWaveStatus,
+    int? currentSpeedKmH,
+    String? etaText,
+    int? etaRemainingSeconds,
+    String? remainingDistanceKm,
+    String? roadName,
+    String? coordinatesText,
+    LatLng? currentAmbulanceLocation,
+    LatLng? destinationHospitalLocation,
+    List<LatLng>? routeWaypoints,
+  }) {
     return NavigationModel(
-      nextTurnInstruction: '250m 앞 청계2가 사거리 좌회전',
-      greenWaveStatus: '스마트 긴급신호(Green Wave) 가동: 3개 교',
-      currentSpeedKmH: 68,
-      etaText: '05:42',
-      etaRemainingSeconds: 5 * 60 + 42,
-      remainingDistanceKm: '2.8 km',
-      roadName: '대학로 진입로',
-      coordinatesText: '청계천로 고가 (37.5665, 126.9780)',
-      currentAmbulanceLocation: const LatLng(37.5665, 126.9780),
-      destinationHospitalLocation: const LatLng(37.5796, 127.0000),
-      routeWaypoints: waypoints,
+      nextTurnInstruction: nextTurnInstruction ?? this.nextTurnInstruction,
+      greenWaveStatus: greenWaveStatus ?? this.greenWaveStatus,
+      currentSpeedKmH: currentSpeedKmH ?? this.currentSpeedKmH,
+      etaText: etaText ?? this.etaText,
+      etaRemainingSeconds: etaRemainingSeconds ?? this.etaRemainingSeconds,
+      remainingDistanceKm: remainingDistanceKm ?? this.remainingDistanceKm,
+      roadName: roadName ?? this.roadName,
+      coordinatesText: coordinatesText ?? this.coordinatesText,
+      currentAmbulanceLocation: currentAmbulanceLocation ?? this.currentAmbulanceLocation,
+      destinationHospitalLocation: destinationHospitalLocation ?? this.destinationHospitalLocation,
+      routeWaypoints: routeWaypoints ?? this.routeWaypoints,
+    );
+  }
+
+  static NavigationModel createInitialMock() {
+    return const NavigationModel(
+      nextTurnInstruction: '경로 안내 대기 중 (병원 선택 후 안내 시작)',
+      greenWaveStatus: '스마트 긴급신호(Green Wave) 대기',
+      currentSpeedKmH: 0,
+      etaText: '--:--',
+      etaRemainingSeconds: 0,
+      remainingDistanceKm: '0.0 km',
+      roadName: '출동 대기',
+      coordinatesText: '구급차 위치 (37.5665, 126.9780)',
+      currentAmbulanceLocation: LatLng(37.5665, 126.9780),
+      destinationHospitalLocation: LatLng(37.5684, 126.9678),
+      routeWaypoints: [],
     );
   }
 }

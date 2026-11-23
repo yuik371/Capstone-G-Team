@@ -26,19 +26,22 @@ class ClinicalPhotosWidget extends StatelessWidget {
             children: [
               Icon(Icons.photo_camera_outlined, color: Color(0xFF4B5563), size: 16),
               SizedBox(width: 8),
-              Text(
-                '임상 사진 및 응급의료센터 동기화',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1F2937),
+              Expanded(
+                child: Text(
+                  '임상 사진 및 응급의료센터 동기화',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1F2937),
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Spacer(),
-              Icon(Icons.cloud_done_outlined, color: Color(0xFF059669), size: 16),
+              SizedBox(width: 6),
+              Icon(Icons.cloud_done_outlined, color: Color(0xFF059669), size: 14),
               SizedBox(width: 4),
               Text(
-                '응급실 모니터 실시간 공유 완료',
+                '실시간 공유 완료',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,

@@ -21,6 +21,7 @@ class PatientModel {
   final String gender;
   final String ktasLevel;
   final String avpu; // 'A', 'V', 'P', 'U'
+  final String symptom;
 
   // Vitals
   final int systolicBp;
@@ -45,6 +46,7 @@ class PatientModel {
     required this.gender,
     required this.ktasLevel,
     required this.avpu,
+    this.symptom = '흉부 둔상 및 호흡 곤란 (KTAS 1급)',
     required this.systolicBp,
     required this.diastolicBp,
     required this.mapBp,
@@ -60,7 +62,12 @@ class PatientModel {
   });
 
   PatientModel copyWith({
+    String? name,
+    int? age,
+    String? gender,
+    String? ktasLevel,
     String? avpu,
+    String? symptom,
     int? systolicBp,
     int? diastolicBp,
     int? mapBp,
@@ -73,11 +80,12 @@ class PatientModel {
   }) {
     return PatientModel(
       id: id,
-      name: name,
-      age: age,
-      gender: gender,
-      ktasLevel: ktasLevel,
+      name: name ?? this.name,
+      age: age ?? this.age,
+      gender: gender ?? this.gender,
+      ktasLevel: ktasLevel ?? this.ktasLevel,
       avpu: avpu ?? this.avpu,
+      symptom: symptom ?? this.symptom,
       systolicBp: systolicBp ?? this.systolicBp,
       diastolicBp: diastolicBp ?? this.diastolicBp,
       mapBp: mapBp ?? this.mapBp,
@@ -101,6 +109,7 @@ class PatientModel {
       gender: '남',
       ktasLevel: 'PRE-KTAS LEVEL 1 (중증외상·심혈관)',
       avpu: 'V', // Verbal (언어응답)
+      symptom: '흉부 둔상 및 호흡 곤란 (KTAS 1급)',
       systolicBp: 85,
       diastolicBp: 55,
       mapBp: 65,
@@ -109,18 +118,18 @@ class PatientModel {
       spo2: 92,
       bodyTemp: 36.1,
       respRate: 24,
-      acceptanceHospital: '서울대병원 ER',
-      acceptanceBed: '외상소생 1베이 확정 수용',
-      goldenTimeSeconds: 18 * 60 + 24, // 18분 24초
+      acceptanceHospital: '서울대학교병원 권역외상센터 (확정)',
+      acceptanceBed: '외상소생 1베이 즉시 배정',
+      goldenTimeSeconds: 18 * 60 + 24,
       clinicalPhotos: [
         ClinicalPhotoItem(
           title: '흉부 둔상 부위 (05:32)',
           time: '05:32',
-          badge: null,
+          badge: 'NEW',
         ),
         ClinicalPhotoItem(
           title: '12유도 심전도 전송',
-          time: '05:34',
+          time: '05:33',
           badge: '12-LEAD',
         ),
       ],

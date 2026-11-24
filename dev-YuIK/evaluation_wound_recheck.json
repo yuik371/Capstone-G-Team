@@ -1,0 +1,62 @@
+{
+  "checkpoint": "C:\\Users\\geome\\OneDrive\\바탕 화면\\Capstone-G-Team\\dev-YuIK\\dataset\\best_efficientnet_b0_wound.pt",
+  "device": "cpu",
+  "test": {
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
+    "balanced_accuracy": 1.0,
+    "per_class_precision": {
+      "abrasions": 1.0,
+      "bruises": 1.0,
+      "cut": 1.0,
+      "stab": 1.0
+    },
+    "per_class_recall": {
+      "abrasions": 1.0,
+      "bruises": 1.0,
+      "cut": 1.0,
+      "stab": 1.0
+    },
+    "per_class_f1": {
+      "abrasions": 1.0,
+      "bruises": 1.0,
+      "cut": 1.0,
+      "stab": 1.0
+    },
+    "per_class_support": {
+      "abrasions": 11,
+      "bruises": 11,
+      "cut": 6,
+      "stab": 3
+    },
+    "confusion_matrix": [
+      [
+        11,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        11,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        6,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        3
+      ]
+    ],
+    "loss": 0.024828102439641953,
+    "num_samples": 31
+  },
+  "predictions": []
+}

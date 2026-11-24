@@ -161,30 +161,53 @@ python -m emergency_cdss.scripts.train_wound --no-pretrained --epochs 1 --num-wo
    현재 `LandmarkDataset`은 고정 길이 `[N, F]` 입력용이며, 시계열 모델은
    별도의 padding/mask 정책을 추가해야 한다.
 
-## 안면 랜드마크 융합 실험
+## 라우팅 시뮬레이션: β·γ 민감도와 paired bootstrap
 
-`FACE_LANDMARK_MULTIMODAL_CVPR_METHOD.md` describes the EfficientNet-B0 and
-3D-mesh fusion method, identity-disjoint evaluation protocol, geometric
-descriptors, and the limits of the supplied expression dataset. The executable
-five-fold pipeline is `emergency_cdss/scripts/validate_face_multimodal.py`.
+`emergency_cdss/scripts/routing_sim.py`는 실제 환자·병상 데이터 없이, 고정
+seed로 만든 합성 시나리오에서 세 정책(`nearest`, `max_beds`, `proposed`)을
+비교하는 평가 도구다. `proposed`의 비용은 아래와 같으며 모든 가중치는
+분 단위 등가 비용이다.
 
-Run it from `dev-YuIK` after installing the tested CUDA environment:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r emergency_cdss/requirements-face-validation.txt
-python -m emergency_cdss.scripts.validate_face_multimodal `
-  --epochs 100 --batch-size 16 --time-budget-hours 4
+```text
+J(h) = ETA + α·E[wait] + β·(1 − P_accept) + γ·P(resource unavailable)
 ```
 
-The pilot completed all ten model fits (100 epochs each) in 15.8 minutes on the
-RTX 5070 laptop GPU. Out-of-fold macro F1 was 0.5864 for vision-only and 0.6525
-for image-plus-mesh fusion. The paired identity-bootstrap interval for the F1
-difference includes zero, so this ten-identity sample does not establish a
-reliable classification gain. Results, checkpoints, PR curves, and the 6x6
-qualitative grid are in `outputs/face_multimodal_cvpr_2027/`. These expression
-labels do not support clinical diagnosis claims.
+여기서 `β`는 수용 거절 위험, `γ`는 필요 자원 불가 위험의 비용이다. 두 값은
+정답이 아니라 가정이므로, 기본 4×4 그리드 결과를 반드시 함께 보고한다.
+같은 환자와 병원 상태 난수를 모든 정책이 공유하며, bootstrap은 환자별 정책
+결과 쌍을 재표본화한다. 따라서 `proposed − baseline`의 95% 구간은 독립 표본
+가정에 의존하지 않는다. 구간이 0을 포함하면 해당 합성 조건에서 우위를
+확정적으로 주장하지 않는다.
+
+```powershell
+cd dev-YuIK
+python -m emergency_cdss.scripts.routing_sim --patients 3000 --bootstrap 5000 `
+  --output-dir routing_results
+```
+
+생성물은 `policy_summary.csv`, `beta_gamma_sensitivity.csv`,
+`paired_bootstrap_ci.json`이다. `eta_minutes()`의 직선거리 ETA, 병원 구성,
+자원 매핑, 가용성 확률은 모두 데모 가정이다. 배포 또는 임상적 주장 전에는
+전문의가 자원 매핑을 검토하고, 타임스탬프가 보존된 병상 API와 OSM/ITS ETA로
+교체해야 한다.
+
+## 상처 유형과 KTAS 연구 라벨
+
+EfficientNet-B0는 현재 상처 외관 유형을 분류한다. 이 출력을 KTAS 1-5 또는
+진단으로 직접 변환하지 않는다. 중증도는 활력징후, 의식, 호흡·혈역학 상태,
+출혈, 기전, 통증 등을 포함하는 임상 검토 라벨이 필요하다. 실행 가능한
+manifest 생성·검증 절차와 이중 라벨링 규칙은
+[`TRIAGE_LABELING_PROTOCOL.md`](TRIAGE_LABELING_PROTOCOL.md)에 정리했다.
+
+```powershell
+cd dev-YuIK
+..\.venv\Scripts\python.exe -m emergency_cdss.scripts.create_triage_manifest `
+  --image-root dataset --output dataset/triage_manifest.csv
+```
+
+생성되는 manifest에는 기존 상처 유형 라벨만 입력되며, `clinical_ktas_level`은
+자격 있는 임상 검토자가 근거 코드 및 필수 임상 입력과 함께 입력하기 전까지
+비어 있다.
 
 ## 8. 라이선스
 

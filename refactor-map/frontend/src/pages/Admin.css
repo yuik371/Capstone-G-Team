@@ -1,0 +1,274 @@
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f4f6fa;
+  color: #1b2437;
+  font-family: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+}
+
+.admin-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  padding: 26px 16px;
+  background: #0f2147;
+  color: #fff;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 8px 30px;
+}
+
+.admin-logo {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 10px;
+  background: #e5483f;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.admin-brand strong,
+.admin-brand small {
+  display: block;
+}
+
+.admin-brand small {
+  margin-top: 4px;
+  color: #a9b9db;
+  font-size: 11px;
+}
+
+.user_name {
+  display: grid;
+  gap: 5px;
+  margin: 0 4px 14px;
+  padding: 14px;
+  border-bottom: 1px solid #344568;
+}
+
+.user_name strong {
+  color: #fff;
+  font-size: 14px;
+}
+
+.user_name span {
+  color: #a9b9db;
+  font-size: 12px;
+}
+.admin-logout {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid #52617c;
+  border-radius: 8px;
+  background: transparent;
+  color: #c7d2e8;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  display: block;
+  width: fit-content;
+  margin: 14px auto 0;
+}
+
+.admin-logout:hover {
+  background: #203967;
+  color: #fff;
+}
+
+.admin-nav {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-nav button {
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #c7d2e8;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.admin-nav button:hover,
+.admin-nav button.active {
+  background: #203967;
+  color: #fff;
+}
+
+.admin-main {
+  min-width: 0;
+  flex: 1;
+  padding: 34px;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.admin-header p {
+  margin: 0 0 6px;
+  color: #6b768c;
+  font-size: 13px;
+}
+
+.admin-header h1 {
+  margin: 0;
+  font-size: 25px;
+}
+
+.admin-refresh {
+  padding: 9px 14px;
+  border: 1px solid #dfe4ee;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b2437;
+  cursor: pointer;
+}
+
+.admin-card {
+  padding: 22px;
+  border: 1px solid #e3e7ef;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.admin-card h2 {
+  margin: 0 0 18px;
+  font-size: 17px;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 13px 12px;
+  border-bottom: 1px solid #edf0f5;
+  vertical-align: middle;
+}
+
+.admin-table th {
+  background: #f8f9fc;
+  color: #59657b;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-table td strong,
+.admin-table td span,
+.admin-table td small {
+  display: block;
+}
+
+.admin-table td span,
+.admin-table td small {
+  margin-top: 4px;
+  color: #6b768c;
+}
+
+.admin-table td small {
+  color: #1f4fb4;
+}
+
+.admin-reason {
+  min-width: 180px;
+  max-width: 280px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.admin-actions button {
+  padding: 7px 11px;
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.admin-actions button:disabled,
+.admin-refresh:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.admin-actions .approve {
+  background: #1f4fb4;
+}
+
+.admin-actions .reject {
+  background: #e5483f;
+}
+
+.admin-empty,
+.admin-loading {
+  padding: 28px 12px;
+  color: #6b768c;
+  text-align: center;
+}
+
+.admin-alert {
+  margin: 0 0 14px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.admin-alert.error {
+  background: #fff0ef;
+  color: #b52d26;
+}
+
+.admin-alert.success {
+  background: #edf8f1;
+  color: #217342;
+}
+
+@media (max-width: 760px) {
+  .admin-layout {
+    display: block;
+  }
+
+  .admin-sidebar {
+    width: auto;
+    padding: 16px;
+  }
+
+  .admin-brand {
+    padding-bottom: 16px;
+  }
+
+  .admin-nav {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-main {
+    padding: 20px 14px;
+  }
+
+  .admin-card {
+    padding: 15px;
+  }
+}
